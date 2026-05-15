@@ -3,14 +3,23 @@
 #include <vector>
 #include <easyx.h>
 #include "Rely.h"
+#include "Player.h"
 
 using std::vector;
+
+#define GAMEWIDTH 900
+#define GAMEHIGHT 640
+#define MAPWIDTH 630
+#define MAPHIGHT 630
+
+const int gap = 5;
+
 
 class GameCtr
 {
 public:
 	//初始化
-	GameCtr();
+	GameCtr(int x, int y, int rank);
 
 	//获取
 
@@ -21,21 +30,31 @@ public:
 	//获取当前地图层次
 	int getCurRank() const;
 	//获取地图元素
-	Color getMapVal() const;
+	Color getMapVal(int x, int y) const;       
 	//获取当前地图引用
-	vector<vector<Color> >& getCurMap() const;
+	vector<vector<Color> >& getCurMap(int rank);
+	//获取方格边长；
+	int getBlockSize() const;
 
 	//修改
 	
 	//修改横轴格子数
-	bool changeX();
+	bool changeX(int x);
 	//修改竖轴格子数
-	bool changeY();
+	bool changeY(int y);
 	//修改当前地图层级
-	bool changeCurRank();
-	
+	bool changeCurRank(int rank);
+	//修改方格边长
+	bool changeBlackSize();
+	//修改地图
+	bool changeMapVal(int y, int x, Color c);
+
 	//绘制
 
+	//初始化窗口
+	void init();
+	//绘制背景
+	void drawBK();
 	//绘制开始界面
 	void drawStartBoard();
 	//绘制提示界面
@@ -46,20 +65,34 @@ public:
 	void drawMapVal();
 	//绘制暂停界面
 	void drawPauseTable();
+
+	//清除
+
+	//重置地图
+	void clearMap();
+
+
+	//检查
+
+	//检查是否赢了
+	bool checkWin();
+
+
 	
 	//游戏主循环
 	void solve();
 
 	
 private:
-	vector<vector<vector<Color> > > m_map;
+	vector< vector < vector <Color> > > m_map;
 	vector<vector<Color> > m_cur_map;
 	int m_x;
 	int m_y;
 	int m_rank;
 	int m_cur_rank;
+	int m_black_size;
 
-	
-
+	Player p[2];
+	Player& cur_p;
 };
 

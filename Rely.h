@@ -5,8 +5,14 @@
 */
 
 //ÑÕÉ«
+#include <easyx.h>
+
 enum class Color
 {
+	Null = 0,
+	White = WHITE,
+	Black = BLACK,
+	Red = RED,
 	
 };
 
@@ -15,5 +21,6 @@ struct Point
 {
 	int x;
 	int y;
+
 
 };
