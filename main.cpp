@@ -10,11 +10,7 @@
 int main()
 {
 	GameCtr game(20, 20, 5);
-	game.init();
-	game.drawBK();
-	game.drawMapLine();
-	game.changeMapVal(2, 2, Color::Red);
-	game.drawMapVal();
+	game.solve();
 
 	_getch();
 }

@@ -2,8 +2,10 @@
 
 #include <vector>
 #include <easyx.h>
+#include <conio.h>
 #include "Rely.h"
 #include "Player.h"
+#include <iostream>
 
 using std::vector;
 
@@ -42,12 +44,16 @@ public:
 	bool changeX(int x);
 	//修改竖轴格子数
 	bool changeY(int y);
-	//修改当前地图层级
-	bool changeCurRank(int rank);
+	//修改当前地图
+	bool changeCurMap(); 
+	//地图层级+1
+	bool addCurRank();
+	//地图层级-1
+	bool subCurRank();
 	//修改方格边长
 	bool changeBlackSize();
 	//修改地图
-	bool changeMapVal(int y, int x, Color c);
+	bool changeMapVal(int x, int y, Color c);
 
 	//绘制
 
@@ -69,6 +75,8 @@ public:
 	//清除
 
 	//重置地图
+	void clearMapVal();
+	//清空地图界面
 	void clearMap();
 
 
@@ -76,7 +84,8 @@ public:
 
 	//检查是否赢了
 	bool checkWin();
-
+	//检查是否可以更改地图
+	bool checkCanChangeMapVal(int x, int y, Color c);
 
 	
 	//游戏主循环
@@ -85,7 +94,7 @@ public:
 	
 private:
 	vector< vector < vector <Color> > > m_map;
-	vector<vector<Color> > m_cur_map;
+	vector<vector<Color> >* m_cur_map;
 	int m_x;
 	int m_y;
 	int m_rank;
@@ -93,6 +102,7 @@ private:
 	int m_black_size;
 
 	Player p[2];
-	Player& cur_p;
+	//Player& cur_p;
+	int m_cur_p_index;
 };
 

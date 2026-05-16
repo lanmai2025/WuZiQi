@@ -9,10 +9,11 @@
 
 enum class Color
 {
-	Null = 0,
+	Null = -1,
 	White = WHITE,
 	Black = BLACK,
 	Red = RED,
+	Yellow = YELLOW
 	
 };
 
