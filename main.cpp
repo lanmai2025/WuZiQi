@@ -15,24 +15,3 @@ int main()
 	_getch();
 }
 
-// 这是一个修改
-
-//vector<vector<vector<int>>> k;
-//
-//vector< vector <int > >& getK()
-//{
-//	return k[1];
-//}
-
-
-//int add()
-//{
-//	int size = 1;
-//	int d = 4;
-//	std::vector<int> a(size, d);
-//
-//	a.resize(10);
-//	a.size();
-//	
-//	vector<vector<int>> a(10, vector<int>(1, 2));
-//}
