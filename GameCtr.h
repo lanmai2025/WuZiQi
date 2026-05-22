@@ -68,7 +68,7 @@ public:
 	//绘制棋盘线
 	void drawMapLine();
 	//绘制棋子
-	void drawMapVal();
+	void drawMapVal(Player& cur_p);
 	//绘制暂停界面
 	void drawPauseTable();
 
@@ -83,13 +83,17 @@ public:
 	//检查
 
 	//检查是否赢了
-	bool checkWin();
+	bool checkWin(Player& cur_p);
 	//检查是否可以更改地图
 	bool checkCanChangeMapVal(int x, int y, Color c);
 
 	
-	//游戏主循环
-	void solve();
+	//游戏循环
+	void gameLoop(); //真人vs
+	void gameLoopAI(); //真人vsAI
+
+	//菜单
+	void menu();
 
 	
 private:
@@ -101,8 +105,8 @@ private:
 	int m_cur_rank;
 	int m_black_size;
 
-	Player p[2];
+	//Player p[2];
 	//Player& cur_p;
-	int m_cur_p_index;
+	//int m_cur_p_index;
 };
 

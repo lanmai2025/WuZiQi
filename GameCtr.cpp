@@ -1,14 +1,12 @@
 #include "GameCtr.h"
 
 GameCtr::GameCtr(int x, int y, int rank)
-	:m_x(x),m_y(y),m_rank(rank),m_cur_p_index(0)
+	:m_x(x),m_y(y),m_rank(rank)
 {
 	m_cur_rank = 0;
 	changeBlackSize();
 	m_map = vector<vector<vector<Color>>>(rank, vector<vector<Color>>(y, vector<Color>(x,Color::Null)));
 	m_cur_map = &m_map[m_cur_rank];
-	p[0].changeColor(Color::Black);
-	p[1].changeColor(Color::Red);
 }
 
 int GameCtr::getX() const
@@ -135,9 +133,9 @@ void GameCtr::drawMapLine()
 	}
 }
 
-void GameCtr::drawMapVal()
+void GameCtr::drawMapVal(Player& cur_p)
 {
-	Player& cur_p = p[m_cur_p_index];
+	//Player& cur_p = p[m_cur_p_index];
 
 	int size = getBlockSize();
 	int step = size + 1;
@@ -177,9 +175,9 @@ void GameCtr::clearMap()
 	drawMapLine();
 }
 
-bool GameCtr::checkWin()  
+bool GameCtr::checkWin(Player& cur_p)  
 {
-	Player& cur_p = p[m_cur_p_index];
+	//Player& cur_p = p[m_cur_p_index];
 	Color c = cur_p.getColor();
 	int cur_x = cur_p.getCurX();
 	int cur_y = cur_p.getCurY();
@@ -192,6 +190,8 @@ bool GameCtr::checkWin()
 		if (x >= m_x) break;
 		if ((*m_cur_map)[cur_y][x] == c)
 			++cnt;
+		else break;
+
 	}
 	for (int i = 1; i < 5; ++i)
 	{
@@ -199,6 +199,8 @@ bool GameCtr::checkWin()
 		if (x < 0) break;
 		if ((*m_cur_map)[cur_y][x] == c)
 			++cnt;
+		else break;
+
 	}
 	if (cnt >= 5) return true;
 
@@ -210,6 +212,7 @@ bool GameCtr::checkWin()
 		if (y >= m_y) break;
 		if ((*m_cur_map)[y][cur_x] == c)
 			++cnt;
+		else break;
 	}
 	for (int i = 1; i < 5; ++i)
 	{
@@ -217,6 +220,7 @@ bool GameCtr::checkWin()
 		if (y < 0) break;
 		if ((*m_cur_map)[y][cur_x] == c)
 			++cnt;
+		else break;
 	}
 	if (cnt >= 5) return true;
 
@@ -229,6 +233,7 @@ bool GameCtr::checkWin()
 		if (x >= m_x || y >= m_y) break;
 		if ((*m_cur_map)[y][x] == c)
 			++cnt;
+		else break;
 	}
 	for (int i = 1; i < 5; ++i)
 	{
@@ -237,6 +242,7 @@ bool GameCtr::checkWin()
 		if (x < 0 || y < 0) break;
 		if ((*m_cur_map)[y][x] == c)
 			++cnt;
+		else break;
 	}
 	if (cnt >= 5) return true;
 
@@ -249,6 +255,7 @@ bool GameCtr::checkWin()
 		if (x >= m_x || y < 0) break;
 		if ((*m_cur_map)[y][x] == c)
 			++cnt;
+		else break;
 	}
 	for (int i = 1; i < 5; ++i)
 	{
@@ -257,6 +264,7 @@ bool GameCtr::checkWin()
 		if (x < 0 || y >= m_y) break;
 		if ((*m_cur_map)[y][x] == c)
 			++cnt;
+		else break;
 	}
 	if (cnt >= 5) return true;
 
@@ -269,15 +277,17 @@ bool GameCtr::checkCanChangeMapVal(int x, int y, Color c)
 	return false;
 }
 
-void GameCtr::solve()
+void GameCtr::gameLoop()
 {
-	init();
-	drawBK();
-	drawMapLine();
-
 	ExMessage em;
-	Player* cur_p = &p[m_cur_p_index];
+	//Player* cur_p = &p[m_cur_p_index];
+	Player p[2] = {
+		Player(0, 0, Color::Black),
+		Player(0, 0, Color::Red)
+	};
 	int size = getBlockSize() + 1;
+	int m_cur_p_index = 0;
+	Player* cur_p = &p[m_cur_p_index];
 
 
 	while (true)
@@ -300,8 +310,8 @@ void GameCtr::solve()
 			if (checkCanChangeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor()))
 			{
 				changeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor());
-				drawMapVal();
-				if (checkWin())
+				drawMapVal(*cur_p);
+				if (checkWin(*cur_p))
 				{
 					std::cout << "Win" << std::endl;
 					_getch();
@@ -321,7 +331,7 @@ void GameCtr::solve()
 
 			subCurRank();
 			changeCurMap();
-			drawMapVal();
+			drawMapVal(*cur_p);
 			m_cur_p_index = (m_cur_p_index + 1) % 2;
 			cur_p = &p[m_cur_p_index];
 			break;
@@ -329,5 +339,86 @@ void GameCtr::solve()
 		}
 		//Sleep(50);
 
+	}
+}
+
+void GameCtr::gameLoopAI()
+{
+
+
+	init();
+	drawBK();
+	drawMapLine();
+
+	ExMessage em = getmessage(EX_MOUSE);
+
+	Player p = Player(0, 0, Color::Black);
+	AIPlayer AI = AIPlayer(getX(), getY(), Color::Red, m_cur_map);
+
+	int size = getBlockSize() + 1;
+
+	while (true)
+	{
+		em = getmessage(EX_MOUSE);
+
+		switch (em.message)
+		{
+			case WM_LBUTTONDOWN:
+				//左键下棋
+				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
+					em.x < 0 || em.y < 0) continue;
+				p.changeCurX(em.x / size);
+				p.changeCurY(em.y / size);
+				if (checkCanChangeMapVal(p.getCurX(), p.getCurY(), p.getColor()))
+				{
+					changeMapVal(p.getCurX(), p.getCurY(), p.getColor());
+					drawMapVal(p);
+					if (checkWin(p))
+					{
+						std::cout << "Player Win" << std::endl;
+						_getch();
+						return;
+					}
+					else
+					{
+						AI.changeMap(m_cur_map);
+						if (AI.changeCurPos(p))
+						{
+							changeMapVal(AI.getCurX(), AI.getCurY(), AI.getColor());
+							drawMapVal(AI);
+							if (checkWin(AI))
+							{
+								std::cout << "AI Win" << std::endl;
+								_getch();
+								return;
+							}
+						}
+					}
+				}
+				break;
+		}
+	}
+
+}
+
+void GameCtr::menu()
+{
+	init();
+	drawBK();
+	drawMapLine();
+	//绘制菜单界面的函数
+	// ...
+
+	ExMessage em;
+
+	//按键俘获，根据按键进入不同的游戏模式
+	while (true)
+	{
+		em = getmessage(EX_MOUSE);
+		switch (em.message)
+		{
+		case WM_LBUTTONDOWN:
+			break;
+		}
 	}
 }
