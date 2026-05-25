@@ -37,15 +37,15 @@ struct Score
 
 	bool operator < (const Score& s) const
 	{
-		if (attack_score != s.attack_score) return attack_score <= s.attack_score;
-		return defend_score <= s.defend_score;
+		if (defend_score != s.defend_score) return defend_score <= s.defend_score;
+		return attack_score <= s.attack_score;
 		//return total_score < s.total_score;
 	}
 
 	bool operator > (const Score& s) const
 	{
-		if (attack_score != s.attack_score) return attack_score >= s.attack_score;
-		return defend_score >= s.defend_score;
+		if (defend_score != s.defend_score) return defend_score >= s.defend_score;
+		return attack_score >= s.attack_score;
 		//return total_score > s.total_score;
 	}
 };

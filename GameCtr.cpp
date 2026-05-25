@@ -396,6 +396,18 @@ void GameCtr::gameLoopAI()
 					}
 				}
 				break;
+			case WM_RBUTTONDOWN:
+				//ÓÒ¼ü»ÚÆå
+				clearMap();
+				clearMapVal();
+
+				subCurRank();
+				subCurRank();
+				changeCurMap();
+				drawMapVal(p);
+				AI.changeMap(m_cur_map);
+				break;
+
 		}
 	}
 

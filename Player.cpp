@@ -73,7 +73,7 @@ bool AIPlayer::changeCurPos(Player& p)
 			if ((*m_map)[y][x] == Color::Null)
 			{
 				Score s = getScore(x, y);
-				if (s.attack_score > 3 || s.defend_score > 3)
+				if (s.attack_score > 2 || s.defend_score > 2)
 				{
 					changeCurX(x);
 					changeCurY(y);
@@ -115,7 +115,7 @@ bool AIPlayer::changeCurPos(Player& p)
 
 Score AIPlayer::getScore(int cur_x,int cur_y)
 {
-	Score s(0, 0);
+	Score s(0, 0), ans(0,0);
 	
 	//查x轴
 	for (int i = 1; i < 5; ++i)
@@ -128,6 +128,20 @@ Score AIPlayer::getScore(int cur_x,int cur_y)
 			++s.defend_score;
 	}
 
+	for (int i = 1; i < 5; ++i)
+	{
+		int x = cur_x - i;
+		if (x < 0) break;
+		if ((*m_map)[cur_y][x] == getColor())
+			++s.attack_score;
+		else if ((*m_map)[cur_y][x] != Color::Null)
+			++s.defend_score;
+		else break;
+	}
+
+	ans = s > ans ? s : ans;
+	s = Score(0, 0);
+
 	//查y轴
 	for (int i = 1; i < 5; ++i)
 	{
@@ -137,7 +151,22 @@ Score AIPlayer::getScore(int cur_x,int cur_y)
 			++s.attack_score;
 		else if ((*m_map)[y][cur_x] != Color::Null)
 			++s.defend_score;
+		else break;
+
 	}
+	for (int i = 1; i < 5; ++i)
+	{
+		int y = cur_y - i;
+		if (y < 0) break;
+		if ((*m_map)[y][cur_x] == getColor())
+			++s.attack_score;
+		else if ((*m_map)[y][cur_x] != Color::Null)
+			++s.defend_score;
+		else break;
+
+	}
+	ans = s > ans ? s : ans;
+	s = Score(0, 0);
 
 	//查斜线
 	for (int i = 1; i < 5; ++i)
@@ -149,8 +178,24 @@ Score AIPlayer::getScore(int cur_x,int cur_y)
 			++s.attack_score;
 		else if ((*m_map)[y][x] != Color::Null)
 			++s.defend_score;
+		else break;
+
 	}
-	
+	for (int i = 1; i < 5; ++i)
+	{
+		int x = cur_x - i;
+		int y = cur_y - i;
+		if (x < 0 || y < 0) break;
+		if ((*m_map)[y][x] == getColor())
+			++s.attack_score;
+		else if ((*m_map)[y][x] != Color::Null)
+			++s.defend_score;
+		else break;
+
+	}
+	ans = s > ans ? s : ans;
+	s = Score(0, 0);
+
 	//查反斜线
 	for (int i = 1; i < 5; ++i)
 	{
@@ -161,9 +206,24 @@ Score AIPlayer::getScore(int cur_x,int cur_y)
 			++s.attack_score;
 		else if ((*m_map)[y][x] != Color::Null)
 			++s.defend_score;
-	}
+		else break;
 
-	return s;
+	}
+	for (int i = 1; i < 5; ++i)
+	{
+		int x = cur_x + i;
+		int y = cur_y - i;
+		if (x >= m_x || y < 0) break;
+		if ((*m_map)[y][x] == getColor())
+			++s.attack_score;
+		else if ((*m_map)[y][x] != Color::Null)
+			++s.defend_score;
+		else break;
+
+	}
+	ans = s > ans ? s : ans;
+
+	return ans;
 }
 
 
