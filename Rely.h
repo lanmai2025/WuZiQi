@@ -13,8 +13,11 @@ enum class Color
 	White = WHITE,
 	Black = BLACK,
 	Red = RED,
-	Yellow = YELLOW
-	
+	Yellow = YELLOW,
+	Green = GREEN,
+	Blue = BLUE,
+	Cyan = CYAN,
+	Magenta = MAGENTA
 };
 
 //зјБъ

@@ -10,7 +10,7 @@
 int main()
 {
 	GameCtr game(20, 20, 5);
-	game.gameLoopAI();
+	game.menu();
 
 	_getch();
 }

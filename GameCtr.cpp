@@ -7,6 +7,9 @@ GameCtr::GameCtr(int x, int y, int rank)
 	changeBlackSize();
 	m_map = vector<vector<vector<Color>>>(rank, vector<vector<Color>>(y, vector<Color>(x,Color::Null)));
 	m_cur_map = &m_map[m_cur_rank];
+	m_bk_color = Color::White;
+	m_p1_color = Color::Black;
+	m_p2_color = Color::Red;
 }
 
 int GameCtr::getX() const
@@ -97,8 +100,7 @@ void GameCtr::init()
 void GameCtr::drawBK()
 {
 	//绘制基本界面
-	setfillcolor(WHITE);
-	fillrectangle(gap, gap, GAMEWIDTH - gap, GAMEHIGHT - gap);
+	fillBK();
 
 	setlinecolor(BLACK);
 	setlinestyle(PS_SOLID, 5);		//更改线样式
@@ -109,7 +111,9 @@ void GameCtr::drawBK()
 
 void GameCtr::drawStartBoard()
 {
-
+	IMAGE img;
+	loadimage(&img,_T("PNG"), MAKEINTRESOURCE(IDB_PNG1), GAMEWIDTH, GAMEHIGHT); 
+	putimage(0, 0, &img);
 }
 
 void GameCtr::drawPrompt()
@@ -173,6 +177,20 @@ void GameCtr::clearMap()
 {
 	drawBK();
 	drawMapLine();
+}
+
+void GameCtr::clearGameData()
+{
+	//清空地图数据
+	for (int rank = 0; rank < m_rank; ++rank)
+	{
+		for (int y = 0; y < m_y; ++y)
+			for (int x = 0; x < m_x; ++x)
+				m_map[rank][y][x] = Color::Null;
+	}
+
+	m_cur_rank = 0;
+	changeCurMap();
 }
 
 bool GameCtr::checkWin(Player& cur_p)  
@@ -277,30 +295,29 @@ bool GameCtr::checkCanChangeMapVal(int x, int y, Color c)
 	return false;
 }
 
-void GameCtr::gameLoop()
+void GameCtr::gameLoop(ExMessage& em)
 {
-	ExMessage em;
+	em = {};
+	clearGameData();
+	drawBK();
+	drawMapLine();
+
 	//Player* cur_p = &p[m_cur_p_index];
 	Player p[2] = {
-		Player(0, 0, Color::Black),
-		Player(0, 0, Color::Red)
+		Player(0, 0, m_p1_color),
+		Player(0, 0, m_p2_color)
 	};
 	int size = getBlockSize() + 1;
 	int m_cur_p_index = 0;
 	Player* cur_p = &p[m_cur_p_index];
 
-
-	while (true)
+	bool running = true;
+	while (running)
 	{
-		em = getmessage(EX_MOUSE);
+		peekmessage(&em, EX_MOUSE|EX_KEY);
 
 		switch (em.message)
 		{
-		case WM_MOUSEMOVE:
-			// 鼠标移动的时候画红色的小点
-			putpixel(em.x, em.y, RED);
-			break;
-
 		case WM_LBUTTONDOWN:
 			//左键下棋
 			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
@@ -313,8 +330,12 @@ void GameCtr::gameLoop()
 				drawMapVal(*cur_p);
 				if (checkWin(*cur_p))
 				{
-					std::cout << "Win" << std::endl;
-					_getch();
+					/*std::cout << "Win" << std::endl;*/
+					//绘制赢了的界面
+					clearGameData();
+					showResult(_T("玩家获胜！"));
+					running = false;
+					return;
 				}
 				else
 				{
@@ -336,30 +357,41 @@ void GameCtr::gameLoop()
 			cur_p = &p[m_cur_p_index];
 			break;
 
+
+			// ESC键退出
+		case WM_KEYDOWN:
+			if (em.vkcode == VK_ESCAPE)
+			{
+				running = false;
+				clearGameData();
+				return;
+			}
+			break;
 		}
-		//Sleep(50);
+		Sleep(10);
 
 	}
 }
 
-void GameCtr::gameLoopAI()
+void GameCtr::gameLoopAI(ExMessage& em)
 {
-
-
-	init();
+	em = {};
+	clearGameData();
+	//init();
 	drawBK();
 	drawMapLine();
 
-	ExMessage em = getmessage(EX_MOUSE);
+	//ExMessage em = getmessage(EX_MOUSE);
 
-	Player p = Player(0, 0, Color::Black);
-	AIPlayer AI = AIPlayer(getX(), getY(), Color::Red, m_cur_map);
+	Player p = Player(0, 0, m_p1_color);
+	AIPlayer AI = AIPlayer(getX(), getY(), m_p2_color, m_cur_map);
 
 	int size = getBlockSize() + 1;
 
-	while (true)
+	bool running = true;
+	while (running)
 	{
-		em = getmessage(EX_MOUSE);
+		peekmessage(&em,EX_MOUSE|EX_KEY);
 
 		switch (em.message)
 		{
@@ -376,7 +408,9 @@ void GameCtr::gameLoopAI()
 					if (checkWin(p))
 					{
 						std::cout << "Player Win" << std::endl;
-						_getch();
+						//绘制赢了的界面
+						clearGameData();
+						running = false;
 						return;
 					}
 					else
@@ -389,7 +423,9 @@ void GameCtr::gameLoopAI()
 							if (checkWin(AI))
 							{
 								std::cout << "AI Win" << std::endl;
-								_getch();
+								//绘制赢了的界面
+								clearGameData();
+								running = false;
 								return;
 							}
 						}
@@ -408,29 +444,423 @@ void GameCtr::gameLoopAI()
 				AI.changeMap(m_cur_map);
 				break;
 
+				//ESC键退出
+			case WM_KEYDOWN:
+				if (em.vkcode == VK_ESCAPE) 
+				{
+					running = false;
+					clearGameData();
+					return;
+				}
+				break;
 		}
+		Sleep(10);
 	}
 
 }
 
 void GameCtr::menu()
 {
-	init();
-	drawBK();
-	drawMapLine();
-	//绘制菜单界面的函数
-	// ...
+	bool should_exit = false;
 
-	ExMessage em;
+	while (!should_exit) {
+		// 每次循环都重新绘制菜单
+		init();
+		drawBK();
+		drawMapLine();
+		drawStartBoard();
 
-	//按键俘获，根据按键进入不同的游戏模式
-	while (true)
-	{
-		em = getmessage(EX_MOUSE);
-		switch (em.message)
-		{
-		case WM_LBUTTONDOWN:
-			break;
+		// 绘制菜单按钮
+		setlinecolor(RED);
+		int sx = GAMEWIDTH / 2 - 60;
+		int ex = GAMEWIDTH / 2 + 100;
+		int y1 = GAMEHIGHT / 2 - 90;
+		int y2 = GAMEHIGHT / 2 - 40;
+		int y3 = GAMEHIGHT / 2 + 30;
+		int y4 = GAMEHIGHT / 2 + 80;
+
+		ExMessage em;
+		bool menu_handled = false;
+
+		while (!menu_handled) {
+			if (peekmessage(&em, EX_MOUSE)) {
+				if (em.message == WM_LBUTTONDOWN) {
+					int x = em.x;
+					int y = em.y;
+
+					if (x >= sx && x <= ex) {
+						if (y >= y1 && y <= y2) {
+							// 开始游戏
+							cleardevice();
+							ExMessage new_em;
+							gameLoop(new_em);
+							menu_handled = true;  // 游戏结束，重新显示菜单
+						}
+						else if (y >= y2 && y <= y3) {
+							// AI对战
+							cleardevice();
+							ExMessage new_em;
+							gameLoopAI(new_em);
+							menu_handled = true;
+						}
+						else if (y >= y3 && y <= y4) {
+							// 游戏设置
+							cleardevice();
+							ExMessage new_em;
+							gameSet(new_em);
+							menu_handled = true;
+						}
+					}
+				}
+			}
+			Sleep(10);
 		}
 	}
+}
+
+bool GameCtr::gameSet(ExMessage& em)
+{
+	cleardevice();
+	fillBK();
+	Color bk_color = m_bk_color;
+	Color p1_color = m_p1_color;
+	Color p2_color = m_p2_color;
+	int Map_x = getX();
+	int Map_y = getY();
+
+	// 定义界面元素位置和尺寸
+	const int item_height = 40;
+	const int item_spacing = 20;
+	const int start_y = 100;
+	const int label_width = 120;
+	const int color_box_size = 30;
+	const int input_width = 100;
+	const int button_width = 120;
+	const int button_height = 40;
+
+	// 当前选中的项目（用于输入框）
+	int selected_item = -1;
+	TCHAR input_text[32] = _T("");  // 改为TCHAR数组
+
+	// 颜色选择框是否显示
+	bool show_color_picker = false;
+	int color_picker_for = -1; // 0:背景色, 1:玩家1, 2:玩家2
+
+	// 预定义颜色选项
+	Color color_options[] = {
+		Color::White, Color::Black, Color::Red, Color::Green,
+		Color::Blue, Color::Yellow, Color::Cyan, Color::Magenta
+	};
+
+	// 绘制初始界面
+	auto drawInterface = [&]() {
+		cleardevice();
+		fillBK();
+
+		settextcolor(BLACK);
+		settextstyle(20, 0, _T("宋体"));
+		setbkmode(TRANSPARENT);
+
+		// 标题
+		outtextxy(GAMEWIDTH / 2 - 60, 50, _T("游戏设置"));
+
+		// 背景颜色设置
+		outtextxy(100, start_y, _T("背景颜色:"));
+		setfillcolor((long long) bk_color);
+		fillrectangle(250, start_y, 250 + color_box_size, start_y + color_box_size);
+		rectangle(250, start_y, 250 + color_box_size, start_y + color_box_size);
+
+		// 玩家1颜色
+		outtextxy(100, start_y + item_height + item_spacing, _T("玩家1颜色:"));
+		setfillcolor((long long) p1_color);
+		fillrectangle(250, start_y + item_height + item_spacing,
+			250 + color_box_size, start_y + item_height + item_spacing + color_box_size);
+		rectangle(250, start_y + item_height + item_spacing,
+			250 + color_box_size, start_y + item_height + item_spacing + color_box_size);
+
+		// 玩家2颜色
+		outtextxy(100, start_y + 2 * (item_height + item_spacing), _T("玩家2颜色:"));
+		setfillcolor((long long) p2_color);
+		fillrectangle(250, start_y + 2 * (item_height + item_spacing),
+			250 + color_box_size, start_y + 2 * (item_height + item_spacing) + color_box_size);
+		rectangle(250, start_y + 2 * (item_height + item_spacing),
+			250 + color_box_size, start_y + 2 * (item_height + item_spacing) + color_box_size);
+
+		// 地图宽度
+		outtextxy(100, start_y + 3 * (item_height + item_spacing), _T("地图宽度:"));
+		if (selected_item == 0) {
+			setlinecolor(RED); // 选中状态高亮
+		}
+		else {
+			setlinecolor(BLACK);
+		}
+		rectangle(250, start_y + 3 * (item_height + item_spacing),
+			250 + input_width, start_y + 3 * (item_height + item_spacing) + item_height);
+		setlinecolor(BLACK);
+
+		// 使用TCHAR字符串输出
+		TCHAR width_text[32];
+		if (selected_item == 0 && _tcslen(input_text) > 0) {
+			_tcscpy_s(width_text, input_text);
+		}
+		else {
+			_stprintf_s(width_text, _T("%d"), Map_x);
+		}
+		outtextxy(255, start_y + 3 * (item_height + item_spacing) + 10, width_text);
+
+		// 地图高度
+		outtextxy(100, start_y + 4 * (item_height + item_spacing), _T("地图高度:"));
+		if (selected_item == 1) {
+			setlinecolor(RED);
+		}
+		else {
+			setlinecolor(BLACK);
+		}
+		rectangle(250, start_y + 4 * (item_height + item_spacing),
+			250 + input_width, start_y + 4 * (item_height + item_spacing) + item_height);
+		setlinecolor(BLACK);
+
+		// 修正：使用TCHAR字符串输出
+		TCHAR height_text[32];
+		if (selected_item == 1 && _tcslen(input_text) > 0) {
+			_tcscpy_s(height_text, input_text);
+		}
+		else {
+			_stprintf_s(height_text, _T("%d"), Map_y);
+		}
+		outtextxy(255, start_y + 4 * (item_height + item_spacing) + 10, height_text);
+
+		// 确认按钮
+		setfillcolor(LIGHTGRAY);
+		fillrectangle(GAMEWIDTH / 2 - button_width / 2, start_y + 5 * (item_height + item_spacing),
+			GAMEWIDTH / 2 + button_width / 2, start_y + 5 * (item_height + item_spacing) + button_height);
+		rectangle(GAMEWIDTH / 2 - button_width / 2, start_y + 5 * (item_height + item_spacing),
+			GAMEWIDTH / 2 + button_width / 2, start_y + 5 * (item_height + item_spacing) + button_height);
+		outtextxy(GAMEWIDTH / 2 - 30, start_y + 5 * (item_height + item_spacing) + 10, _T("确认"));
+
+		// 颜色选择框（如果显示）
+		if (show_color_picker) {
+			setfillcolor(WHITE);
+			fillrectangle(400, start_y, 600, start_y + 200);
+			rectangle(400, start_y, 600, start_y + 200);
+			outtextxy(410, start_y + 10, _T("选择颜色:"));
+
+			for (int i = 0; i < 8; i++) {
+				int row = i / 4;
+				int col = i % 4;
+				setfillcolor((long long) color_options[i]);
+				fillrectangle(410 + col * 45, start_y + 40 + row * 40,
+					410 + col * 45 + 40, start_y + 40 + row * 40 + 30);
+				rectangle(410 + col * 45, start_y + 40 + row * 40,
+					410 + col * 45 + 40, start_y + 40 + row * 40 + 30);
+			}
+		}
+		};
+
+	drawInterface();
+
+	int x, y;
+
+	// 主循环
+	while (true) {
+		if (peekmessage(&em, EX_MOUSE | EX_KEY)) {
+			switch (em.message) {
+			case WM_LBUTTONDOWN:
+				x = em.x;
+				y = em.y;
+				// 检查颜色选择框点击
+				if (show_color_picker) {
+					if (x >= 400 && x <= 600 && y >= start_y && y <= start_y + 200) {
+						for (int i = 0; i < 8; i++) {
+							int row = i / 4;
+							int col = i % 4;
+							if (x >= 410 + col * 45 && x <= 410 + col * 45 + 40 &&
+								y >= start_y + 40 + row * 40 && y <= start_y + 40 + row * 40 + 30) {
+								// 更新对应颜色
+								switch (color_picker_for) {
+								case 0: bk_color = color_options[i]; break;
+								case 1: p1_color = color_options[i]; break;
+								case 2: p2_color = color_options[i]; break;
+								}
+								show_color_picker = false;
+								break;
+							}
+						}
+					}
+					else {
+						show_color_picker = false;
+					}
+					drawInterface();
+					continue;
+				}
+
+				// 背景颜色选择
+				if (x >= 250 && x <= 250 + color_box_size &&
+					y >= start_y && y <= start_y + color_box_size) {
+					show_color_picker = true;
+					color_picker_for = 0;
+					drawInterface();
+					continue;
+				}
+
+				// 玩家1颜色选择
+				if (x >= 250 && x <= 250 + color_box_size &&
+					y >= start_y + item_height + item_spacing &&
+					y <= start_y + item_height + item_spacing + color_box_size) {
+					show_color_picker = true;
+					color_picker_for = 1;
+					drawInterface();
+					continue;
+				}
+
+				// 玩家2颜色选择
+				if (x >= 250 && x <= 250 + color_box_size &&
+					y >= start_y + 2 * (item_height + item_spacing) &&
+					y <= start_y + 2 * (item_height + item_spacing) + color_box_size) {
+					show_color_picker = true;
+					color_picker_for = 2;
+					drawInterface();
+					continue;
+				}
+
+				// 地图宽度输入框
+				if (x >= 250 && x <= 250 + input_width &&
+					y >= start_y + 3 * (item_height + item_spacing) &&
+					y <= start_y + 3 * (item_height + item_spacing) + item_height) {
+					selected_item = 0;
+					_stprintf_s(input_text, _T("%d"), Map_x);
+					drawInterface();
+					continue;
+				}
+
+				// 地图高度输入框
+				if (x >= 250 && x <= 250 + input_width &&
+					y >= start_y + 4 * (item_height + item_spacing) &&
+					y <= start_y + 4 * (item_height + item_spacing) + item_height) {
+					selected_item = 1;
+					_stprintf_s(input_text, _T("%d"), Map_y);
+					drawInterface();
+					continue;
+				}
+
+				// 确认按钮
+				if (x >= GAMEWIDTH / 2 - button_width / 2 && x <= GAMEWIDTH / 2 + button_width / 2 &&
+					y >= start_y + 5 * (item_height + item_spacing) &&
+					y <= start_y + 5 * (item_height + item_spacing) + button_height) {
+					// 保存设置并返回
+					setBKColor(bk_color);
+					setP1Color(p1_color);
+					setP2Color(p2_color);
+					if (_tcslen(input_text) > 0) {
+						int value = _ttoi(input_text);
+						if (selected_item == 0) Map_x = value;
+						else if (selected_item == 1) Map_y = value;
+						changeX(Map_x);
+						changeY(Map_y);
+						changeMap();
+						changeBlackSize();
+					}
+					return true;
+				}
+				break;
+
+			case WM_CHAR:
+				if (selected_item >= 0) {
+					if (em.ch >= _T('0') && em.ch <= _T('9')) {
+						if (_tcslen(input_text) < 10) { // 限制长度
+							TCHAR new_char[2] = { em.ch, _T('\0') };
+							_tcscat_s(input_text, new_char);
+						}
+					}
+					else if (em.ch == _T('\b') && _tcslen(input_text) > 0) {
+						input_text[_tcslen(input_text) - 1] = _T('\0');
+					}
+					drawInterface();
+				}
+				break;
+
+			case WM_KEYDOWN:
+				if (em.vkcode == VK_ESCAPE) {
+					if (show_color_picker) {
+						show_color_picker = false;
+						drawInterface();
+					}
+					else if (selected_item >= 0) {
+						selected_item = -1;
+						input_text[0] = _T('\0');
+						drawInterface();
+					}
+					else {
+						return true; // 直接返回菜单
+					}
+				}
+				break;
+			}
+		}
+		Sleep(10);
+	}
+
+	return true;
+}
+
+void GameCtr::showResult(const TCHAR* msg)
+{
+	setfillcolor(RGB(220,190,130));
+	fillrectangle(0, 0, GAMEWIDTH, GAMEHIGHT);
+	int bw = 400, bh = 200;
+	int bx = (GAMEWIDTH - bw) / 2;
+	int by = (GAMEHIGHT - bh) / 2;
+	setfillcolor(WHITE);
+	fillrectangle(bx, by, bx + bw, by + bh);
+
+	// 结果文字（大号，黑色，居中）
+	settextstyle(36, 0, _T("黑体"));
+	settextcolor(BLACK);
+	RECT tr = { bx, by + 20, bx + bw, by + 70 };
+	drawtext(msg, &tr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	settextstyle(18, 0, _T("宋体"));
+	settextcolor(RGB(100, 100, 100));
+	RECT hintRect = { bx, by + 90, bx + bw, by + 140 };
+	drawtext(_T("按任意键或点击鼠标返回菜单"), &hintRect,
+		DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	// 等待按键或鼠标左键
+	ExMessage m;
+	while (true) {
+		if (peekmessage(&m, EX_KEY | EX_MOUSE)) {
+			if (m.message == WM_KEYDOWN || m.message == WM_LBUTTONDOWN)
+				break;
+		}
+		Sleep(20);
+	}
+}
+bool GameCtr::setBKColor(Color c)
+{
+	m_bk_color = c;
+	return true;
+}
+
+bool GameCtr::setP1Color(Color c)
+{
+	m_p1_color = c;
+	return true;
+}
+
+bool GameCtr::setP2Color(Color c)
+{
+	m_p2_color = c;
+	return true;
+}
+bool GameCtr::changeMap()
+{
+	m_map = vector<vector<vector<Color>>>(m_rank, vector<vector<Color>>(m_y, vector<Color>(m_x, Color::Null)));
+	return true;
+}
+
+
+void GameCtr::fillBK()
+{
+	setfillcolor((long long)m_bk_color);
+	fillrectangle(gap, gap, GAMEWIDTH - gap, GAMEHIGHT - gap);
 }
