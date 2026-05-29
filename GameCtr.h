@@ -85,7 +85,13 @@ public:
 	void drawMapVal(Player& cur_p);
 	//绘制暂停界面
 	void drawPauseTable();
-
+	//绘制结算界面
+	enum class ResultAction
+	{
+		one_more_round,
+	    go_menu
+	};
+	ResultAction showResult(const TCHAR* winnerText);
 	//清除
 
 	//重置地图
@@ -122,7 +128,7 @@ private:
 	Color m_bk_color;
 	Color m_p1_color;
 	Color m_p2_color;
-	void showResult(LPCTSTR msg);
+
 	//Player p[2];
 	//Player& cur_p;
 	//int m_cur_p_index;
