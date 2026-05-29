@@ -12,6 +12,7 @@ int main()
 	GameCtr game(20, 20, 5);
 	game.menu();
 	closegraph();
+	yfurfurk4ifk4ifrr4kf
 	
 }
 
