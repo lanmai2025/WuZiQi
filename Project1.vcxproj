@@ -141,7 +141,7 @@
     <ResourceCompile Include="Project1.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="C:\Users\Jiang\Desktop\主页.png" />
+    <Image Include="主页.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
