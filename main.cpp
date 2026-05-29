@@ -11,8 +11,8 @@ int main()
 {
 	GameCtr game(20, 20, 5);
 	game.menu();
-
-	_getch();
+	closegraph();
+	
 }
 
 //≥¢ ‘

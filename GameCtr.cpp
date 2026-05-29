@@ -166,6 +166,11 @@ void GameCtr::drawMapVal(Player& cur_p)
 	}
 }
 
+void GameCtr::drawPauseTable()
+{
+	
+}
+
 void GameCtr::clearMapVal()
 {
 	for (int y = 0; y < m_y; ++y)
@@ -330,10 +335,9 @@ void GameCtr::gameLoop(ExMessage& em)
 				drawMapVal(*cur_p);
 				if (checkWin(*cur_p))
 				{
-					/*std::cout << "Win" << std::endl;*/
+					std::cout << "Win" << std::endl;
 					//绘制赢了的界面
 					clearGameData();
-					showResult(_T("玩家获胜！"));
 					running = false;
 					return;
 				}
@@ -368,7 +372,7 @@ void GameCtr::gameLoop(ExMessage& em)
 			}
 			break;
 		}
-		Sleep(10);
+		//Sleep(10);
 
 	}
 }
@@ -454,7 +458,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				}
 				break;
 		}
-		Sleep(10);
+		//Sleep(10);
 	}
 
 }
@@ -483,7 +487,7 @@ void GameCtr::menu()
 		bool menu_handled = false;
 
 		while (!menu_handled) {
-			if (peekmessage(&em, EX_MOUSE)) {
+			if (peekmessage(&em, EX_MOUSE | EX_KEY)) {
 				if (em.message == WM_LBUTTONDOWN) {
 					int x = em.x;
 					int y = em.y;
@@ -512,11 +516,24 @@ void GameCtr::menu()
 						}
 					}
 				}
+				else if (em.message == WM_KEYDOWN)
+				{
+
+					if (em.vkcode == VK_ESCAPE)
+					{
+						Sleep(50);
+						//closegraph();
+						return;
+					}
+				}
 			}
 			Sleep(10);
 		}
 	}
 }
+
+
+
 
 bool GameCtr::gameSet(ExMessage& em)
 {
@@ -534,17 +551,20 @@ bool GameCtr::gameSet(ExMessage& em)
 	const int start_y = 100;
 	const int label_width = 120;
 	const int color_box_size = 30;
-	const int input_width = 100;
+	const int size_box_width = 80;  // 尺寸选择框宽度
 	const int button_width = 120;
 	const int button_height = 40;
 
-	// 当前选中的项目（用于输入框）
-	int selected_item = -1;
-	TCHAR input_text[32] = _T("");  // 改为TCHAR数组
+	// 尺寸选项
+	int size_options[] = {15, 20, 30};
 
 	// 颜色选择框是否显示
 	bool show_color_picker = false;
 	int color_picker_for = -1; // 0:背景色, 1:玩家1, 2:玩家2
+
+	// 尺寸选择框是否显示
+	bool show_size_picker = false;
+	int size_picker_for = -1; // 0:宽度, 1:高度
 
 	// 预定义颜色选项
 	Color color_options[] = {
@@ -588,46 +608,26 @@ bool GameCtr::gameSet(ExMessage& em)
 
 		// 地图宽度
 		outtextxy(100, start_y + 3 * (item_height + item_spacing), _T("地图宽度:"));
-		if (selected_item == 0) {
-			setlinecolor(RED); // 选中状态高亮
-		}
-		else {
-			setlinecolor(BLACK);
-		}
+		setfillcolor(LIGHTGRAY);
+		fillrectangle(250, start_y + 3 * (item_height + item_spacing),
+			250 + size_box_width, start_y + 3 * (item_height + item_spacing) + item_height);
 		rectangle(250, start_y + 3 * (item_height + item_spacing),
-			250 + input_width, start_y + 3 * (item_height + item_spacing) + item_height);
-		setlinecolor(BLACK);
-
-		// 使用TCHAR字符串输出
+			250 + size_box_width, start_y + 3 * (item_height + item_spacing) + item_height);
+		
 		TCHAR width_text[32];
-		if (selected_item == 0 && _tcslen(input_text) > 0) {
-			_tcscpy_s(width_text, input_text);
-		}
-		else {
-			_stprintf_s(width_text, _T("%d"), Map_x);
-		}
+		_stprintf_s(width_text, _T("%d"), Map_x);
 		outtextxy(255, start_y + 3 * (item_height + item_spacing) + 10, width_text);
 
 		// 地图高度
 		outtextxy(100, start_y + 4 * (item_height + item_spacing), _T("地图高度:"));
-		if (selected_item == 1) {
-			setlinecolor(RED);
-		}
-		else {
-			setlinecolor(BLACK);
-		}
+		setfillcolor(LIGHTGRAY);
+		fillrectangle(250, start_y + 4 * (item_height + item_spacing),
+			250 + size_box_width, start_y + 4 * (item_height + item_spacing) + item_height);
 		rectangle(250, start_y + 4 * (item_height + item_spacing),
-			250 + input_width, start_y + 4 * (item_height + item_spacing) + item_height);
-		setlinecolor(BLACK);
-
-		// 修正：使用TCHAR字符串输出
+			250 + size_box_width, start_y + 4 * (item_height + item_spacing) + item_height);
+		
 		TCHAR height_text[32];
-		if (selected_item == 1 && _tcslen(input_text) > 0) {
-			_tcscpy_s(height_text, input_text);
-		}
-		else {
-			_stprintf_s(height_text, _T("%d"), Map_y);
-		}
+		_stprintf_s(height_text, _T("%d"), Map_y);
 		outtextxy(255, start_y + 4 * (item_height + item_spacing) + 10, height_text);
 
 		// 确认按钮
@@ -655,6 +655,24 @@ bool GameCtr::gameSet(ExMessage& em)
 					410 + col * 45 + 40, start_y + 40 + row * 40 + 30);
 			}
 		}
+
+		// 尺寸选择框（如果显示）
+		if (show_size_picker) {
+			setfillcolor(WHITE);
+			fillrectangle(400, start_y, 500, start_y + 120);
+			rectangle(400, start_y, 500, start_y + 120);
+			outtextxy(410, start_y + 10, _T("选择尺寸:"));
+
+			for (int i = 0; i < 3; i++) {
+				setfillcolor(LIGHTGRAY);
+				fillrectangle(410, start_y + 40 + i * 30, 490, start_y + 40 + i * 30 + 25);
+				rectangle(410, start_y + 40 + i * 30, 490, start_y + 40 + i * 30 + 25);
+				
+				TCHAR size_text[8];
+				_stprintf_s(size_text, _T("%d"), size_options[i]);
+				outtextxy(430, start_y + 40 + i * 30 + 5, size_text);
+			}
+		}
 		};
 
 	drawInterface();
@@ -668,6 +686,7 @@ bool GameCtr::gameSet(ExMessage& em)
 			case WM_LBUTTONDOWN:
 				x = em.x;
 				y = em.y;
+				
 				// 检查颜色选择框点击
 				if (show_color_picker) {
 					if (x >= 400 && x <= 600 && y >= start_y && y <= start_y + 200) {
@@ -689,6 +708,29 @@ bool GameCtr::gameSet(ExMessage& em)
 					}
 					else {
 						show_color_picker = false;
+					}
+					drawInterface();
+					continue;
+				}
+
+				// 检查尺寸选择框点击
+				if (show_size_picker) {
+					if (x >= 400 && x <= 500 && y >= start_y && y <= start_y + 120) {
+						for (int i = 0; i < 3; i++) {
+							if (x >= 410 && x <= 490 &&
+								y >= start_y + 40 + i * 30 && y <= start_y + 40 + i * 30 + 25) {
+								// 更新对应尺寸
+								switch (size_picker_for) {
+								case 0: Map_x = size_options[i]; break;
+								case 1: Map_y = size_options[i]; break;
+								}
+								show_size_picker = false;
+								break;
+							}
+						}
+					}
+					else {
+						show_size_picker = false;
 					}
 					drawInterface();
 					continue;
@@ -723,22 +765,22 @@ bool GameCtr::gameSet(ExMessage& em)
 					continue;
 				}
 
-				// 地图宽度输入框
-				if (x >= 250 && x <= 250 + input_width &&
+				// 地图宽度选择框
+				if (x >= 250 && x <= 250 + size_box_width &&
 					y >= start_y + 3 * (item_height + item_spacing) &&
 					y <= start_y + 3 * (item_height + item_spacing) + item_height) {
-					selected_item = 0;
-					_stprintf_s(input_text, _T("%d"), Map_x);
+					show_size_picker = true;
+					size_picker_for = 0;
 					drawInterface();
 					continue;
 				}
 
-				// 地图高度输入框
-				if (x >= 250 && x <= 250 + input_width &&
+				// 地图高度选择框
+				if (x >= 250 && x <= 250 + size_box_width &&
 					y >= start_y + 4 * (item_height + item_spacing) &&
 					y <= start_y + 4 * (item_height + item_spacing) + item_height) {
-					selected_item = 1;
-					_stprintf_s(input_text, _T("%d"), Map_y);
+					show_size_picker = true;
+					size_picker_for = 1;
 					drawInterface();
 					continue;
 				}
@@ -751,31 +793,11 @@ bool GameCtr::gameSet(ExMessage& em)
 					setBKColor(bk_color);
 					setP1Color(p1_color);
 					setP2Color(p2_color);
-					if (_tcslen(input_text) > 0) {
-						int value = _ttoi(input_text);
-						if (selected_item == 0) Map_x = value;
-						else if (selected_item == 1) Map_y = value;
-						changeX(Map_x);
-						changeY(Map_y);
-						changeMap();
-						changeBlackSize();
-					}
+					changeX(Map_x);
+					changeY(Map_y);
+					changeMap();
+					changeBlackSize();
 					return true;
-				}
-				break;
-
-			case WM_CHAR:
-				if (selected_item >= 0) {
-					if (em.ch >= _T('0') && em.ch <= _T('9')) {
-						if (_tcslen(input_text) < 10) { // 限制长度
-							TCHAR new_char[2] = { em.ch, _T('\0') };
-							_tcscat_s(input_text, new_char);
-						}
-					}
-					else if (em.ch == _T('\b') && _tcslen(input_text) > 0) {
-						input_text[_tcslen(input_text) - 1] = _T('\0');
-					}
-					drawInterface();
 				}
 				break;
 
@@ -785,9 +807,8 @@ bool GameCtr::gameSet(ExMessage& em)
 						show_color_picker = false;
 						drawInterface();
 					}
-					else if (selected_item >= 0) {
-						selected_item = -1;
-						input_text[0] = _T('\0');
+					else if (show_size_picker) {
+						show_size_picker = false;
 						drawInterface();
 					}
 					else {
@@ -803,38 +824,8 @@ bool GameCtr::gameSet(ExMessage& em)
 	return true;
 }
 
-void GameCtr::showResult(const TCHAR* msg)
-{
-	setfillcolor(RGB(220,190,130));
-	fillrectangle(0, 0, GAMEWIDTH, GAMEHIGHT);
-	int bw = 400, bh = 200;
-	int bx = (GAMEWIDTH - bw) / 2;
-	int by = (GAMEHIGHT - bh) / 2;
-	setfillcolor(WHITE);
-	fillrectangle(bx, by, bx + bw, by + bh);
 
-	// 结果文字（大号，黑色，居中）
-	settextstyle(36, 0, _T("黑体"));
-	settextcolor(BLACK);
-	RECT tr = { bx, by + 20, bx + bw, by + 70 };
-	drawtext(msg, &tr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-	settextstyle(18, 0, _T("宋体"));
-	settextcolor(RGB(100, 100, 100));
-	RECT hintRect = { bx, by + 90, bx + bw, by + 140 };
-	drawtext(_T("按任意键或点击鼠标返回菜单"), &hintRect,
-		DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-	// 等待按键或鼠标左键
-	ExMessage m;
-	while (true) {
-		if (peekmessage(&m, EX_KEY | EX_MOUSE)) {
-			if (m.message == WM_KEYDOWN || m.message == WM_LBUTTONDOWN)
-				break;
-		}
-		Sleep(20);
-	}
-}
 bool GameCtr::setBKColor(Color c)
 {
 	m_bk_color = c;

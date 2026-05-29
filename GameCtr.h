@@ -122,7 +122,7 @@ private:
 	Color m_bk_color;
 	Color m_p1_color;
 	Color m_p2_color;
-	void showResult(LPCTSTR msg);
+
 	//Player p[2];
 	//Player& cur_p;
 	//int m_cur_p_index;
