@@ -615,7 +615,7 @@ bool GameCtr::gameSet(ExMessage& em)
 			250 + size_box_width, start_y + 3 * (item_height + item_spacing) + item_height);
 		
 		TCHAR width_text[32];
-		_stprintf_s(width_text, _T("%d"), Map_x);
+		_stprintf_s(width_text, _T("%d"), Map_y);
 		outtextxy(255, start_y + 3 * (item_height + item_spacing) + 10, width_text);
 
 		// µØÍ¼¸ß¶È
@@ -793,7 +793,7 @@ bool GameCtr::gameSet(ExMessage& em)
 					setBKColor(bk_color);
 					setP1Color(p1_color);
 					setP2Color(p2_color);
-					changeX(Map_x);
+					changeX(Map_y);
 					changeY(Map_y);
 					changeMap();
 					changeBlackSize();
@@ -845,7 +845,7 @@ bool GameCtr::setP2Color(Color c)
 }
 bool GameCtr::changeMap()
 {
-	m_map = vector<vector<vector<Color>>>(m_rank, vector<vector<Color>>(m_y, vector<Color>(m_x, Color::Null)));
+	m_map = vector<vector<vector<Color>>>(m_rank, vector<vector<Color>>(m_y, vector<Color>(m_y, Color::Null)));
 	return true;
 }
 
