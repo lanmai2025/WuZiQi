@@ -6,7 +6,8 @@
 #include "Rely.h"
 #include "Player.h"
 #include <iostream>
-
+#include <string>
+#include "resource.h"
 using std::vector;
 
 #define GAMEWIDTH 900
@@ -54,13 +55,26 @@ public:
 	bool changeBlackSize();
 	//修改地图
 	bool changeMapVal(int x, int y, Color c);
+	//修改设置
+	bool gameSet(ExMessage& em);
+	//修改游戏参数
+	bool reSetGame();
+	//修改背景颜色
+	bool setBKColor(Color c);
+	//修改玩家颜色
+	bool setP1Color(Color c);
+	bool setP2Color(Color c);
+	//修改map
+	bool changeMap();
 
 	//绘制
 
 	//初始化窗口
 	void init();
-	//绘制背景
+	//绘制游戏背景
 	void drawBK();
+	//填充背景
+	void fillBK();
 	//绘制开始界面
 	void drawStartBoard();
 	//绘制提示界面
@@ -78,7 +92,8 @@ public:
 	void clearMapVal();
 	//清空地图界面
 	void clearMap();
-
+	//清空游戏数据
+	void clearGameData();
 
 	//检查
 
@@ -89,8 +104,8 @@ public:
 
 	
 	//游戏循环
-	void gameLoop(); //真人vs
-	void gameLoopAI(); //真人vsAI
+	void gameLoop(ExMessage& em); //真人vs
+	void gameLoopAI(ExMessage& em); //真人vsAI
 
 	//菜单
 	void menu();
@@ -104,6 +119,9 @@ private:
 	int m_rank;
 	int m_cur_rank;
 	int m_black_size;
+	Color m_bk_color;
+	Color m_p1_color;
+	Color m_p2_color;
 
 	//Player p[2];
 	//Player& cur_p;
