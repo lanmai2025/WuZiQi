@@ -7,9 +7,9 @@ GameCtr::GameCtr(int x, int y, int rank)
 	changeBlackSize();
 	m_map = vector<vector<vector<Color>>>(rank, vector<vector<Color>>(y, vector<Color>(x,Color::Null)));
 	m_cur_map = &m_map[m_cur_rank];
-	m_bk_color = Color::White;
+	m_bk_color = (Color)RGB(245, 222, 179);
 	m_p1_color = Color::Black;
-	m_p2_color = Color::Red;
+	m_p2_color = Color::White;
 }
 
 int GameCtr::getX() const
@@ -99,6 +99,9 @@ void GameCtr::init()
 
 void GameCtr::drawBK()
 {
+	
+
+
 	//绘制基本界面
 	fillBK();
 
@@ -107,6 +110,9 @@ void GameCtr::drawBK()
 	int left = MAPWIDTH + 2 * gap;
 	int top = GAMEHIGHT;
 	line(left, gap, left , top);
+
+
+
 }
 
 void GameCtr::drawStartBoard()
@@ -335,11 +341,25 @@ void GameCtr::gameLoop(ExMessage& em)
 				drawMapVal(*cur_p);
 				if (checkWin(*cur_p))
 				{
-					std::cout << "Win" << std::endl;
-					//绘制赢了的界面
-					clearGameData();
-					running = false;
-					return;
+
+					bool isFirstPlayer = (cur_p == &p[0]);
+					SettlementAction action = showWinner(*cur_p, isFirstPlayer, false);
+
+					if (action == SettlementAction::RESTART)
+					{
+						//重新开始游戏
+						clearGameData();
+						ExMessage newEm;
+						gameLoop(newEm);
+						return;
+					}
+					else
+					{
+						//返回菜单
+						clearGameData();
+						return;
+					}
+
 				}
 				else
 				{
@@ -413,9 +433,22 @@ void GameCtr::gameLoopAI(ExMessage& em)
 					{
 						std::cout << "Player Win" << std::endl;
 						//绘制赢了的界面
-						clearGameData();
-						running = false;
-						return;
+						SettlementAction action=showWinner(p, true,true);//true表示先手
+						
+						if (action == SettlementAction::RESTART)
+						{
+							clearGameData();
+							ExMessage newEm;
+							gameLoopAI(newEm);
+							return;
+						}
+						else
+						{
+							clearGameData();
+							return;
+						}
+
+
 					}
 					else
 					{
@@ -428,9 +461,19 @@ void GameCtr::gameLoopAI(ExMessage& em)
 							{
 								std::cout << "AI Win" << std::endl;
 								//绘制赢了的界面
-								clearGameData();
-								running = false;
-								return;
+								SettlementAction action=showWinner(AI, false,true);//false表示后手
+								if (action == SettlementAction::RESTART)
+								{
+									clearGameData();
+									ExMessage newEm;
+									gameLoopAI(newEm);
+									return;
+								}
+								else
+								{
+									clearGameData();
+									return;
+								}
 							}
 						}
 					}
@@ -462,6 +505,158 @@ void GameCtr::gameLoopAI(ExMessage& em)
 	}
 
 }
+
+
+/*
+void GameCtr::showWinner(Player& winner, bool isFirstPlayer)
+{
+	setfillcolor(RGB(0, 0, 0));
+	setbkcolor(RGB(0, 0, 0));
+	fillrectangle(0, 0, GAMEWIDTH, GAMEHIGHT);
+
+	settextcolor(RGB(255, 215, 0));
+	settextstyle(48, 0, _T("宋体"));
+	setbkmode(TRANSPARENT);
+	TCHAR winText[100];
+	if (isFirstPlayer)
+	{
+		_stprintf_s(winText, _T("先手胜利！"));
+	}
+	else
+	{
+		_stprintf_s(winText, _T("后手胜利"));
+	}
+	//居中
+	int textWidth = textwidth(winText);
+	outtextxy((GAMEWIDTH - textWidth) / 2, GAMEHIGHT / 2 - 50, winText);
+	//提示返回菜单
+	settextstyle(20, 0, _T("宋体"));
+	outtextxy(GAMEWIDTH / 2 - 80, GAMEHIGHT / 2 + 30, _T("按任意键返回菜单"));
+    //等待按键
+	ExMessage endMsg;
+	while (true)
+	{
+		if (peekmessage(&endMsg, EX_KEY))
+		{
+			if (endMsg.message == WM_KEYDOWN)
+			{
+				clearGameData();
+				break;
+
+			}
+		}
+		Sleep(10);
+	}
+}
+*/
+GameCtr::SettlementAction GameCtr::showWinner(Player& winner, bool isFirstPlayer, bool isAIMode)
+{
+	//开始批量绘图
+	BeginBatchDraw();
+
+	IMAGE settleBg;
+	loadimage(&settleBg, _T("PNG"), MAKEINTRESOURCE(IDB_SETTLE_BG), GAMEWIDTH, GAMEHIGHT);
+	putimage(0, 0, &settleBg);
+
+	settextcolor(RGB(255, 215, 0));
+	settextstyle(48, 0, _T("宋体"));
+	setbkmode(TRANSPARENT);
+
+	TCHAR winText[100];
+
+	if (isAIMode)
+	{
+		if (isFirstPlayer)
+		{
+			_stprintf_s(winText, _T("人类战胜AI"));
+		}
+		else
+		{
+			_stprintf_s(winText, _T("人类一败涂地"));
+		}
+	}
+	else
+	{
+		if (isFirstPlayer)
+		{
+			_stprintf_s(winText, _T("先手胜利！你很强哦~"));
+		}
+		else
+			_stprintf_s(winText, _T("后手胜利！你很强哦~"));
+	}
+
+	//居中
+	int textWidth = textwidth(winText);
+	outtextxy((GAMEWIDTH - textWidth) / 2, GAMEHIGHT / 2 - 50, winText);
+	
+	//刷新显示背景和文字
+	FlushBatchDraw();
+
+	//定义按钮
+	const int btnWidth = 160;
+	const int btnHeight = 55;
+	const int btnSpacing = 40;
+	const int btnY = GAMEHIGHT - 150;
+
+	int restartX = GAMEWIDTH / 2 - btnWidth - btnSpacing / 2;
+	int menuX = GAMEWIDTH / 2 + btnSpacing / 2;
+
+	//绘制按钮并等待点击
+	ExMessage Msg;
+	while (true)
+	{
+		//再来一局按钮
+		setfillcolor(RGB(192, 192, 192));
+		setlinecolor(RGB(255, 250, 240));
+		fillroundrect(restartX, btnY, restartX + btnWidth, btnY + btnHeight, 15, 15);
+		//settextcolor(WHITE);
+		settextcolor(RGB(0, 0, 0));  
+		settextstyle(28, 0, _T("宋体"));
+		settextstyle(28, 0, _T("宋体"));
+		setbkmode(TRANSPARENT);
+		outtextxy(restartX + 35, btnY + 15, _T("再来一局"));
+
+		//返回菜单按钮
+		//setfillcolor(RGB(169, 169, 169));
+		setfillcolor(RGB(192, 192, 192));  
+		setlinecolor(RGB(255, 250, 240));
+		fillroundrect(menuX, btnY, menuX + btnWidth, btnY + btnHeight, 15, 15);
+		outtextxy(menuX + 32, btnY + 15, _T("返回菜单"));
+
+		//刷新显示按钮
+		FlushBatchDraw();
+
+		//检测鼠标点击
+		if (peekmessage(&Msg, EX_MOUSE))
+		{
+			if (Msg.message == WM_LBUTTONDOWN)
+			{
+				int mx = Msg.x;
+				int my = Msg.y;
+
+				//检查“再来一局”按钮
+				if (mx >= restartX && mx <= restartX + btnWidth && my >= btnY && my <= btnY + btnHeight)
+				{
+					EndBatchDraw();//结束批量绘图
+					clearGameData();
+					return SettlementAction::RESTART;
+				}
+
+				//检查“返回菜单”按钮
+				if (mx >= menuX && mx <= menuX + btnWidth && my >= btnY && my <= btnY + btnHeight)
+				{
+					EndBatchDraw();//结束批量绘图
+					clearGameData();
+					return SettlementAction::BACK_TO_MENU;
+				}
+
+			}
+		}
+		Sleep(10);
+	}
+}
+
+
 
 void GameCtr::menu()
 {
@@ -855,3 +1050,12 @@ void GameCtr::fillBK()
 	setfillcolor((long long)m_bk_color);
 	fillrectangle(gap, gap, GAMEWIDTH - gap, GAMEHIGHT - gap);
 }
+
+const TCHAR* GetColorDisplayName(COLORREF color) {
+	if (color == RGB(255, 0, 0))   return _T("红方");
+	if (color == RGB(0, 0, 255))   return _T("蓝方");
+	if (color == RGB(0, 128, 0))   return _T("绿方");
+	if (color == RGB(255, 255, 0)) return _T("黄方");
+	return _T("当前颜色");
+}
+

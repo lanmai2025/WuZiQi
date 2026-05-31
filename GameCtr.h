@@ -110,7 +110,16 @@ public:
 	//菜单
 	void menu();
 
+	//结算页面按钮
+	enum class SettlementAction
+	{
+		RESTART,
+		BACK_TO_MENU
+	};
 	
+	void showWinner(Player& winner, bool isFirstPlayer);
+	SettlementAction showWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
+
 private:
 	vector< vector < vector <Color> > > m_map;
 	vector<vector<Color> >* m_cur_map;
@@ -122,6 +131,7 @@ private:
 	Color m_bk_color;
 	Color m_p1_color;
 	Color m_p2_color;
+	
 
 	//Player p[2];
 	//Player& cur_p;

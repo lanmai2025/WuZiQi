@@ -3,8 +3,8 @@
 // π© Project1.rc  π”√
 //
 #define IDB_PNG1                        101
+#define IDB_SETTLE_BG                   102
 
-// Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
