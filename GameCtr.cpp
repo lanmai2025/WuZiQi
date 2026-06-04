@@ -102,7 +102,7 @@ void GameCtr::drawBK()
 	
 
 
-	//绘制基本界面
+	//绘制基本界面(期待)
 	fillBK();
 
 	setlinecolor(BLACK);
