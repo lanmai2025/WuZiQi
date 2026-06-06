@@ -381,7 +381,8 @@ void GameCtr::gameLoop(ExMessage& em)
 	bool running = true;
 	while (running)
 	{
-		peekmessage(&em, EX_MOUSE|EX_KEY);
+		//peekmessage(&em, EX_MOUSE|EX_KEY);
+		em = getmessage(EX_MOUSE | EX_KEY);
 
 		switch (em.message)
 		{

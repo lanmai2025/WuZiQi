@@ -9,7 +9,7 @@
 
 int main()
 {
-	GameCtr game(20, 20, 5);
+	GameCtr game(20, 20, 10);
 	game.menu();
 	closegraph();
 	
