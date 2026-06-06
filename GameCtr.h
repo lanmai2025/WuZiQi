@@ -95,6 +95,10 @@ public:
 	//清空游戏数据
 	void clearGameData();
 
+	//局内互动
+	void showInteractionMessage(const std::string& msg);
+	void showInteractionMessage(const std::string& msg, Player& cur_p);
+	void showInteractionMessageAI(const std::string& msg, Player& human_p, AIPlayer& ai_p);
 	//检查
 
 	//检查是否赢了
@@ -132,7 +136,10 @@ private:
 	Color m_p1_color;
 	Color m_p2_color;
 	
-
+	int m_totalSteps; //双人对弈总步数
+	int m_humanSteps;//人机对弈中玩家步骤
+	std::string m_interactionMsg;//当前要显示的互动消息
+	
 	//Player p[2];
 	//Player& cur_p;
 	//int m_cur_p_index;

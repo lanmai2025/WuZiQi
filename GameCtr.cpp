@@ -1,5 +1,5 @@
 #include "GameCtr.h"
-
+#include <windows.h>
 GameCtr::GameCtr(int x, int y, int rank)
 	:m_x(x),m_y(y),m_rank(rank)
 {
@@ -10,6 +10,8 @@ GameCtr::GameCtr(int x, int y, int rank)
 	m_bk_color = (Color)RGB(245, 222, 179);
 	m_p1_color = Color::Black;
 	m_p2_color = Color::White;
+	m_totalSteps = 0;
+	m_humanSteps = 0;
 }
 
 int GameCtr::getX() const
@@ -96,13 +98,21 @@ void GameCtr::init()
 {
 	initgraph(GAMEWIDTH, GAMEHIGHT);
 }
+//辅助将std::string 转换为宽字符串（解决乱码问题）
+std::wstring stringToWstring(const std::string& str)
+{
+	int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, NULL, 0);
+	std::wstring wstr(len, L'\0');
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, &wstr[0], len);
+	return wstr;
+}
+
 
 void GameCtr::drawBK()
 {
-	
 
 
-	//绘制基本界面(期待)
+	//绘制基本界面
 	fillBK();
 
 	setlinecolor(BLACK);
@@ -110,9 +120,38 @@ void GameCtr::drawBK()
 	int left = MAPWIDTH + 2 * gap;
 	int top = GAMEHIGHT;
 	line(left, gap, left , top);
-
-
-
+	//设置右侧面板背景
+	setfillcolor(WHITE);
+	fillrectangle(left +5, gap, GAMEWIDTH-5, GAMEHIGHT+5);
+	//绘制面板标题
+	settextcolor(RGB(0, 0, 139));
+	settextstyle(24, 0, _T("宋体"));
+	setbkmode(TRANSPARENT);
+	outtextxy(left + 20, gap + 20, _T("听说此地会"));
+	outtextxy(left + 20, gap + 50, _T("随机刷新提示~"));
+    //绘制分割线
+	setlinecolor(BLACK);
+	line(left + 10, gap + 85, GAMEWIDTH - 10, gap + 85);
+	//绘制消息内容
+	settextcolor(RGB(0, 0, 0));
+	settextstyle(18, 0, _T("楷体"));
+	//简单的自动换行显示
+	std::string msg = m_interactionMsg;
+	int lineHeight = 25;
+	int startY = gap + 105;
+	size_t maxWidth = (GAMEWIDTH - left - 30) / 18;
+	//分行显示
+	std::vector<std::string>lines;
+	for (size_t i = 0;i < msg.length(); i += maxWidth)
+	{
+		lines.push_back(msg.substr(i, maxWidth));
+	}
+	for (size_t i = 0; i < lines.size() && i < 8;i++)
+	{
+		std::wstring wline = stringToWstring(lines[i]);//使用转换函数，防乱码
+		outtextxy(left + 15, startY + i * lineHeight, wline.c_str());
+	}
+	
 }
 
 void GameCtr::drawStartBoard()
@@ -202,6 +241,23 @@ void GameCtr::clearGameData()
 
 	m_cur_rank = 0;
 	changeCurMap();
+
+	
+}
+
+void GameCtr::showInteractionMessage(const std::string& msg)
+{
+	m_interactionMsg = msg;
+}
+
+void GameCtr::showInteractionMessage(const std::string& msg, Player& cur_p)
+{
+	m_interactionMsg = msg;
+}
+
+void GameCtr::showInteractionMessageAI(const std::string& msg, Player& human_p, AIPlayer& ai_p)
+{
+	m_interactionMsg = msg;
 }
 
 bool GameCtr::checkWin(Player& cur_p)  
@@ -335,10 +391,43 @@ void GameCtr::gameLoop(ExMessage& em)
 				em.x < 0 || em.y < 0) continue;
 			cur_p->changeCurX(em.x / size);
 			cur_p->changeCurY(em.y / size);
+
 			if (checkCanChangeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor()))
 			{
+				m_totalSteps++;
+
+				//根据步数显示消息
+				switch (m_totalSteps)
+				{
+				case 10:
+					showInteractionMessage("怎么还没赢啊？你们在试探什么",*cur_p); 
+					
+					break;
+				case 15:
+					showInteractionMessage("打得好文明呐~现代文明人~", *cur_p); 
+					
+					break;
+				case 20:showInteractionMessage("已解锁20步成就。谁要赢了？你吗", *cur_p); 
+					
+					break;
+				case 30:showInteractionMessage("你们是不是忘记怎么赢了", *cur_p); 
+					
+					break;
+				case 40:showInteractionMessage("棋盘都要下满了！", *cur_p); 
+					
+					break;
+				default: break;
+
+				}
+				//落子
 				changeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor());
 				drawMapVal(*cur_p);
+				
+				//统一刷新一次界面
+				drawBK();
+				drawMapLine();
+				drawMapVal(*cur_p);
+
 				if (checkWin(*cur_p))
 				{
 
@@ -367,18 +456,32 @@ void GameCtr::gameLoop(ExMessage& em)
 					cur_p = &p[m_cur_p_index];
 				}
 			}
+			if (em.x > MAPWIDTH || em.y > MAPHIGHT || em.x < 0 || em.y < 0) continue;
+			cur_p->changeCurX(em.x / size);
+			cur_p->changeCurY(em.y / size);
 			break;
 
 		case WM_RBUTTONDOWN:
 			//右键悔棋
-			clearMap();
-			clearMapVal();
+			if (m_cur_rank>0)
+			{
+				//clearMap();
+				//clearMapVal();
 
-			subCurRank();
-			changeCurMap();
-			drawMapVal(*cur_p);
-			m_cur_p_index = (m_cur_p_index + 1) % 2;
-			cur_p = &p[m_cur_p_index];
+				subCurRank();
+				changeCurMap();
+				//drawMapVal(*cur_p);
+				// 重新绘制整个界面（基于新的当前层）
+				drawBK();
+				drawMapLine();
+				drawMapVal(p[0]);   // 绘制所有棋子（因为m_cur_map已经变了）
+				drawMapVal(p[1]);
+
+				m_cur_p_index = (m_cur_p_index + 1) % 2;
+				cur_p = &p[m_cur_p_index];
+				m_totalSteps--;
+			}
+			
 			break;
 
 
@@ -391,6 +494,7 @@ void GameCtr::gameLoop(ExMessage& em)
 				return;
 			}
 			break;
+
 		}
 		//Sleep(10);
 
@@ -415,6 +519,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 	bool running = true;
 	while (running)
 	{
+
 		peekmessage(&em,EX_MOUSE|EX_KEY);
 
 		switch (em.message)
@@ -427,8 +532,23 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				p.changeCurY(em.y / size);
 				if (checkCanChangeMapVal(p.getCurX(), p.getCurY(), p.getColor()))
 				{
+					m_humanSteps++;
+					switch (m_humanSteps)
+					{
+					case 3:showInteractionMessageAI("AI：这个开局还行吧~",p,AI);break;
+					case 5:showInteractionMessageAI("AI：谁快赢了？", p, AI);break;
+					case 8:showInteractionMessageAI("AI：居然让我这个水平的AI下到了第8步", p, AI);break;
+					case 10:showInteractionMessageAI("AI:不是吧，你还没赢！", p, AI);break;
+					case 15:showInteractionMessageAI("AI:如果我赢了，我将说出那句话", p, AI);break;
+					}
+
 					changeMapVal(p.getCurX(), p.getCurY(), p.getColor());
 					drawMapVal(p);
+
+					drawBK();
+					drawMapLine();
+					drawMapVal(p);
+
 					if (checkWin(p))
 					{
 						std::cout << "Player Win" << std::endl;
@@ -457,6 +577,12 @@ void GameCtr::gameLoopAI(ExMessage& em)
 						{
 							changeMapVal(AI.getCurX(), AI.getCurY(), AI.getColor());
 							drawMapVal(AI);
+							//刷新右侧面板
+							drawBK();
+							drawMapLine();
+							drawMapVal(p);
+							drawMapVal(AI);
+
 							if (checkWin(AI))
 							{
 								std::cout << "AI Win" << std::endl;
@@ -477,6 +603,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 							}
 						}
 					}
+				
 				}
 				break;
 			case WM_RBUTTONDOWN:
@@ -484,7 +611,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				clearMap();
 				clearMapVal();
 
-				subCurRank();
+				//subCurRank();
 				subCurRank();
 				changeCurMap();
 				drawMapVal(p);
