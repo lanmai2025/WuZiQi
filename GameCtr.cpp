@@ -149,7 +149,7 @@ void GameCtr::drawBK()
 	for (size_t i = 0; i < lines.size() && i < 8;i++)
 	{
 		std::wstring wline = stringToWstring(lines[i]);//使用转换函数，防乱码
-		outtextxy(left + 15, startY + i * lineHeight, wline.c_str());
+		outtextxy(left + 15, startY + i * lineHeight, LPCTSTR(wline.c_str()));
 	}
 	
 }
@@ -383,6 +383,7 @@ void GameCtr::gameLoop(ExMessage& em)
 	{
 		//peekmessage(&em, EX_MOUSE|EX_KEY);
 		em = getmessage(EX_MOUSE | EX_KEY);
+		
 
 		switch (em.message)
 		{
@@ -402,6 +403,12 @@ void GameCtr::gameLoop(ExMessage& em)
 				{
 				case 10:
 					showInteractionMessage("怎么还没赢啊？你们在试探什么",*cur_p); 
+					//
+					// 将函数改为接受宽字符处理（wstring），或者直接用LPCTSTR类型
+					// 
+					// 调用：showInteractionMessage(std::wstring("怎么还没赢啊？你们在试探什么"), *cur_p);
+					//
+					//去掉转换函数，直接分隔
 					
 					break;
 				case 15:
@@ -464,24 +471,22 @@ void GameCtr::gameLoop(ExMessage& em)
 
 		case WM_RBUTTONDOWN:
 			//右键悔棋
-			if (m_cur_rank>0)
-			{
-				//clearMap();
-				//clearMapVal();
 
-				subCurRank();
-				changeCurMap();
-				//drawMapVal(*cur_p);
-				// 重新绘制整个界面（基于新的当前层）
-				drawBK();
-				drawMapLine();
-				drawMapVal(p[0]);   // 绘制所有棋子（因为m_cur_map已经变了）
-				drawMapVal(p[1]);
+			//clearMap();
+			clearMapVal();
 
-				m_cur_p_index = (m_cur_p_index + 1) % 2;
-				cur_p = &p[m_cur_p_index];
-				m_totalSteps--;
-			}
+			subCurRank();
+			changeCurMap();
+			//drawMapVal(*cur_p);
+			// 重新绘制整个界面（基于新的当前层）
+			drawBK();
+			drawMapLine();
+			drawMapVal(p[0]);   // 绘制所有棋子（因为m_cur_map已经变了）
+			drawMapVal(p[1]);
+
+			m_cur_p_index = (m_cur_p_index + 1) % 2;
+			cur_p = &p[m_cur_p_index];
+			m_totalSteps--;
 			
 			break;
 
@@ -521,7 +526,9 @@ void GameCtr::gameLoopAI(ExMessage& em)
 	while (running)
 	{
 
-		peekmessage(&em,EX_MOUSE|EX_KEY);
+		//peekmessage(&em,EX_MOUSE|EX_KEY);
+		em = getmessage(EX_MOUSE | EX_KEY);
+
 
 		switch (em.message)
 		{
@@ -613,6 +620,8 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				clearMapVal();
 
 				//subCurRank();
+				subCurRank();
+				clearMapVal();
 				subCurRank();
 				changeCurMap();
 				drawMapVal(p);
@@ -852,6 +861,8 @@ void GameCtr::menu()
 			}
 			Sleep(10);
 		}
+	closegraph();
+
 	}
 }
 

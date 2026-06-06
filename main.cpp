@@ -11,7 +11,6 @@ int main()
 {
 	GameCtr game(20, 20, 10);
 	game.menu();
-	closegraph();
 	
 }
 
