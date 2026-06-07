@@ -643,18 +643,12 @@ void GameCtr::gameLoop(ExMessage& em)
 
 		case WM_RBUTTONDOWN:
 			//右键悔棋
-
-			//clearMap();
+			clearMap();
 			clearMapVal();
 
 			subCurRank();
 			changeCurMap();
-			//drawMapVal(*cur_p);
-			// 重新绘制整个界面（基于新的当前层）
-			drawBK();
-			drawMapLine();
-			drawMapVal(p[0]);   // 绘制所有棋子（因为m_cur_map已经变了）
-			drawMapVal(p[1]);
+			drawMapVal(*cur_p);
 
 			m_cur_p_index = (m_cur_p_index + 1) % 2;
 			cur_p = &p[m_cur_p_index];
