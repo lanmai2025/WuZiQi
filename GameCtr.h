@@ -73,6 +73,8 @@ public:
 	void init();
 	//绘制游戏背景
 	void drawBK();
+	//绘制右侧区域
+	void drawRightArea();
 	//填充背景
 	void fillBK();
 	//绘制开始界面
@@ -85,7 +87,17 @@ public:
 	void drawMapVal(Player& cur_p);
 	//绘制暂停界面
 	void drawPauseTable();
-
+	//结算页面按钮
+	enum class SettlementAction
+	{
+		RESTART,
+		BACK_TO_MENU
+	};
+	//绘制结算界面
+	void showWinner(Player& winner, bool isFirstPlayer);
+	SettlementAction showWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
+	void handleWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
+	
 	//清除
 
 	//重置地图
@@ -96,9 +108,10 @@ public:
 	void clearGameData();
 
 	//局内互动
-	void showInteractionMessage(const std::string& msg);
-	void showInteractionMessage(const std::string& msg, Player& cur_p);
-	void showInteractionMessageAI(const std::string& msg, Player& human_p, AIPlayer& ai_p);
+	void showInteractionMessage(const wchar_t* msg, Player& cur_p);
+	//根据步数显示对应消息
+	void checkAndShowMessage(int steps, Player& cur_p);
+	void checkAndShowAIMessage(int steps, Player& human_p);
 	//检查
 
 	//检查是否赢了
@@ -114,16 +127,6 @@ public:
 	//菜单
 	void menu();
 
-	//结算页面按钮
-	enum class SettlementAction
-	{
-		RESTART,
-		BACK_TO_MENU
-	};
-	
-	void showWinner(Player& winner, bool isFirstPlayer);
-	SettlementAction showWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
-
 private:
 	vector< vector < vector <Color> > > m_map;
 	vector<vector<Color> >* m_cur_map;
@@ -138,7 +141,7 @@ private:
 	
 	int m_totalSteps; //双人对弈总步数
 	int m_humanSteps;//人机对弈中玩家步骤
-	std::string m_interactionMsg;//当前要显示的互动消息
+    std::wstring m_interactionMsg;//当前要显示的互动消息,宽字符显示
 	
 	//Player p[2];
 	//Player& cur_p;

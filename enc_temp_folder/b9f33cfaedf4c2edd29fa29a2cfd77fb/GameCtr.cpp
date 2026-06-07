@@ -561,6 +561,8 @@ void GameCtr::gameLoopAI(ExMessage& em)
 					{
 						handleWinner(p, true, true);
 						return;
+
+
 					}
 					else
 					{
