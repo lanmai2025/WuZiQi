@@ -1,5 +1,8 @@
 #include "GameCtr.h"
 #include <windows.h>
+
+static bool g_showTipDialog = false;
+
 GameCtr::GameCtr(int x, int y, int rank)
 	:m_x(x),m_y(y),m_rank(rank)
 {
@@ -101,8 +104,6 @@ void GameCtr::init()
 
 void GameCtr::drawBK()
 {
-
-
 	//绘制基本界面
 	fillBK();
 
@@ -149,6 +150,7 @@ void GameCtr::drawRightArea()
 		outtextxy(left + 15, startY + i * lineHeight, lines[i].c_str());
 	}
 
+	drawPrompt();
 }
 
 void GameCtr::drawStartBoard()
@@ -158,8 +160,141 @@ void GameCtr::drawStartBoard()
 	putimage(0, 0, &img);
 }
 
+// 点击提示按钮
+void GameCtr::handleTipButtonClick(Player& currentPlayer)
+{
+	g_showTipDialog = true;
+}
+
+// 关闭弹窗
+void GameCtr::handleDialogClose(Player& p1, Player& p2)
+{
+	g_showTipDialog = false;
+	// 刷新界面
+	drawBK();
+	drawMapLine();
+	drawMapVal(p1);
+	drawMapVal(p2);
+	drawPrompt();
+}
+
+// 检查是否点击了提示按钮
+bool GameCtr::isTipButtonClicked(int x, int y)
+{
+	int left = MAPWIDTH + 2 * gap;
+	int btnX = left + 10;
+	int btnY = gap + 200;
+	int btnW = (GAMEWIDTH - 5) - (left + 5) - 10;
+	int btnH = (GAMEHIGHT + 5) - btnY - 10;
+
+	return (x >= btnX && x <= btnX + btnW &&
+		y >= btnY && y <= btnY + btnH);
+}
+
+// 检查是否点击了关闭按钮
+bool GameCtr::isCloseBtnClicked(int x, int y)
+{
+	if (!g_showTipDialog) return false;
+
+	// 计算关闭按钮位置
+	const int dialogW = 450;
+	const int dialogH = 280;
+	int dialogX = (GAMEWIDTH - dialogW) / 2;
+	int dialogY = (GAMEHIGHT - dialogH) / 2;
+	int closeX = dialogX + dialogW - 35 - 15;
+	int closeY = dialogY + 15;
+
+	return (x >= closeX && x <= closeX + 35 &&
+		y >= closeY && y <= closeY + 35);
+}
+
 void GameCtr::drawPrompt()
 {
+	//————绘制按钮————
+
+	int left = MAPWIDTH + 2 * gap;
+	int btnX = left + 10;
+	int btnY = gap + 200;
+	int btnW = (GAMEWIDTH - 5) - (left + 5) - 10;
+	int btnH = (GAMEHIGHT + 5) - btnY - 10;
+
+	//绘制按钮背景
+	setfillcolor(RGB(139, 69, 19));
+	setlinecolor(RGB(218, 165, 32));
+	fillroundrect(btnX, btnY, btnX + btnW, btnY + btnH, 15, 15);
+	//绘制边框
+	setlinecolor(BLACK);
+	setlinestyle(PS_SOLID, 2);
+	roundrect(btnX, btnY, btnX + btnW, btnY + btnH, 15, 15);
+	// 绘制文字
+	settextcolor(RGB(218, 165, 32));
+	settextstyle(32, 0, _T("宋体"));
+	setbkmode(TRANSPARENT);
+
+	TCHAR text[] = _T("提示");
+	int tw = textwidth(text);
+	int th = textheight(text);
+	outtextxy(btnX + (btnW - tw) / 2, btnY + (btnH - th) / 2 - 10, text);
+
+	settextstyle(18, 0, _T("宋体"));
+	settextcolor(RGB(255, 240, 180));
+	TCHAR subText[] = _T("点一下试试？");
+	int sw = textwidth(subText);
+	outtextxy(btnX + (btnW - sw) / 2, btnY + (btnH - th) / 2 + 30, subText);
+
+	settextstyle(14, 0, _T("宋体"));
+	settextcolor(RGB(180, 200, 230));
+	TCHAR smallText[] = _T("（小心被嘲讽）");
+	int sw2 = textwidth(smallText);
+	outtextxy(btnX + (btnW - sw2) / 2, btnY + btnH - 25, smallText);
+
+	//————绘制弹窗————
+	if (g_showTipDialog)
+	{
+		//绘制弹窗大小
+		const int dialogW = 450;
+		const int dialogH = 280;
+		const int closeW = 35;
+		const int closeH = 35;
+		// 弹窗居中
+		int dialogX = (GAMEWIDTH - dialogW) / 2;
+		int dialogY = (GAMEHIGHT - dialogH) / 2;
+		// 关闭按钮位置
+		int closeX = dialogX + dialogW - closeW - 15;
+		int closeY = dialogY + 15;
+
+		// 弹窗背景
+		setfillcolor(RGB(245, 245, 245));
+		setlinecolor(BLACK);
+		fillroundrect(dialogX, dialogY, dialogX + dialogW, dialogY + dialogH, 20, 20);
+
+		setlinecolor(BLACK);
+		setlinestyle(PS_SOLID, 3);
+		roundrect(dialogX, dialogY, dialogX + dialogW, dialogY + dialogH, 20, 20);
+
+		// 关闭按钮
+		setfillcolor(RGB(200, 60, 60));
+		fillroundrect(closeX, closeY, closeX + closeW, closeY + closeH, 8, 8);
+		settextcolor(RGB(255, 255, 255));
+		settextstyle(24, 0, _T("宋体"));
+		outtextxy(closeX + 12, closeY + 5, _T("X"));
+
+		// 弹窗文字
+		settextcolor(BLACK);
+		settextstyle(28, 0, _T("宋体"));
+		setbkmode(TRANSPARENT);
+
+		TCHAR line1[] = _T("玩个五子棋还看提示！");
+		int tw1 = textwidth(line1);
+		outtextxy(dialogX + (dialogW - tw1) / 2, dialogY + 80, line1);
+
+		settextcolor(RGB(255, 100, 100));
+		settextstyle(36, 0, _T("宋体"));
+		TCHAR line2[] = _T("人类一败涂地！");
+		int tw2 = textwidth(line2);
+		outtextxy(dialogX + (dialogW - tw2) / 2, dialogY + 140, line2);
+	}
+	
 
 }
 
@@ -440,6 +575,32 @@ void GameCtr::gameLoop(ExMessage& em)
 		switch (em.message)
 		{
 		case WM_LBUTTONDOWN:
+			
+			//弹窗关闭
+			if (isCloseBtnClicked(em.x, em.y))
+			{
+				handleDialogClose(p[0], p[1]);
+				break;
+			}
+			//点击提示按钮
+			if (isTipButtonClicked(em.x, em.y))
+			{
+				handleTipButtonClick(*cur_p);
+				// 刷新界面显示弹窗
+				drawBK();
+				drawMapLine();
+				drawMapVal(p[0]);
+				drawMapVal(p[1]);
+				drawPrompt();
+				break;
+			}
+
+			//弹窗打开时，不能下棋
+			if (g_showTipDialog)
+			{
+				break;  
+			}
+
 			//左键下棋
 			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
 				em.x < 0 || em.y < 0) continue;
@@ -459,6 +620,7 @@ void GameCtr::gameLoop(ExMessage& em)
 				drawBK();
 				drawMapLine();
 				drawMapVal(*cur_p);
+				drawPrompt();
 
 				if (checkWin(*cur_p))
 				{
@@ -475,6 +637,8 @@ void GameCtr::gameLoop(ExMessage& em)
 			if (em.x > MAPWIDTH || em.y > MAPHIGHT || em.x < 0 || em.y < 0) continue;
 			cur_p->changeCurX(em.x / size);
 			cur_p->changeCurY(em.y / size);
+
+		    
 			break;
 
 		case WM_RBUTTONDOWN:
@@ -540,6 +704,32 @@ void GameCtr::gameLoopAI(ExMessage& em)
 		switch (em.message)
 		{
 			case WM_LBUTTONDOWN:
+				
+				// 弹窗关闭
+				if (isCloseBtnClicked(em.x, em.y))
+				{
+					handleDialogClose(p, p);  // 人机模式只有一个玩家，传同一个
+					break;
+				}
+
+				// 处理提示按钮点击
+				if (isTipButtonClicked(em.x, em.y))
+				{
+					handleTipButtonClick(p);
+					drawBK();
+					drawMapLine();
+					drawMapVal(p);
+					drawPrompt();
+					break;
+				}
+				
+				//弹窗打开时，不能下棋
+				if (g_showTipDialog)
+				{
+					break;
+				}
+
+
 				//左键下棋
 				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
 					em.x < 0 || em.y < 0) continue;
@@ -613,49 +803,6 @@ void GameCtr::gameLoopAI(ExMessage& em)
 
 }
 
-
-/*
-void GameCtr::showWinner(Player& winner, bool isFirstPlayer)
-{
-	setfillcolor(RGB(0, 0, 0));
-	setbkcolor(RGB(0, 0, 0));
-	fillrectangle(0, 0, GAMEWIDTH, GAMEHIGHT);
-
-	settextcolor(RGB(255, 215, 0));
-	settextstyle(48, 0, _T("宋体"));
-	setbkmode(TRANSPARENT);
-	TCHAR winText[100];
-	if (isFirstPlayer)
-	{
-		_stprintf_s(winText, _T("先手胜利！"));
-	}
-	else
-	{
-		_stprintf_s(winText, _T("后手胜利"));
-	}
-	//居中
-	int textWidth = textwidth(winText);
-	outtextxy((GAMEWIDTH - textWidth) / 2, GAMEHIGHT / 2 - 50, winText);
-	//提示返回菜单
-	settextstyle(20, 0, _T("宋体"));
-	outtextxy(GAMEWIDTH / 2 - 80, GAMEHIGHT / 2 + 30, _T("按任意键返回菜单"));
-    //等待按键
-	ExMessage endMsg;
-	while (true)
-	{
-		if (peekmessage(&endMsg, EX_KEY))
-		{
-			if (endMsg.message == WM_KEYDOWN)
-			{
-				clearGameData();
-				break;
-
-			}
-		}
-		Sleep(10);
-	}
-}
-*/
 GameCtr::SettlementAction GameCtr::showWinner(Player& winner, bool isFirstPlayer, bool isAIMode)
 {
 	//开始批量绘图

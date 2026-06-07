@@ -80,6 +80,11 @@ public:
 	//绘制开始界面
 	void drawStartBoard();
 	//绘制提示界面
+	void handleTipButtonClick(Player& currentPlayer);
+	void handleDialogClose(Player& p1, Player& p2);
+	bool isTipButtonClicked(int x, int y);
+	bool isCloseBtnClicked(int x, int y);
+
 	void drawPrompt();
 	//绘制棋盘线
 	void drawMapLine();
