@@ -176,6 +176,7 @@ void GameCtr::handleDialogClose(Player& p1, Player& p2)
 	drawMapVal(p1);
 	drawMapVal(p2);
 	drawPrompt();
+	FlushBatchDraw();
 }
 
 // 检查是否点击了提示按钮
@@ -554,10 +555,13 @@ bool GameCtr::checkCanChangeMapVal(int x, int y, Color c)
 
 void GameCtr::gameLoop(ExMessage& em)
 {
+	BeginBatchDraw();//开始批量绘图
+
 	em = {};
 	clearGameData();
 	drawBK();
 	drawMapLine();
+	FlushBatchDraw();
 
 	Player p[2] = {
 		Player(0, 0, m_p1_color),
@@ -592,6 +596,7 @@ void GameCtr::gameLoop(ExMessage& em)
 				drawMapVal(p[0]);
 				drawMapVal(p[1]);
 				drawPrompt();
+				FlushBatchDraw();
 				break;
 			}
 
@@ -621,11 +626,13 @@ void GameCtr::gameLoop(ExMessage& em)
 				drawMapLine();
 				drawMapVal(*cur_p);
 				drawPrompt();
+				FlushBatchDraw();
 
 				if (checkWin(*cur_p))
 				{
 					bool isFirstPlayer = (cur_p == &p[0]);
 					handleWinner(*cur_p, isFirstPlayer, false);
+					EndBatchDraw();
 					return;
 				}
 				else
@@ -663,6 +670,7 @@ void GameCtr::gameLoop(ExMessage& em)
 			{
 				running = false;
 				clearGameData();
+				EndBatchDraw();
 				return;
 			}
 			break;
@@ -671,6 +679,7 @@ void GameCtr::gameLoop(ExMessage& em)
 		//Sleep(10);
 
 	}
+	EndBatchDraw();
 }
 
 void GameCtr::gameLoopAI(ExMessage& em)
