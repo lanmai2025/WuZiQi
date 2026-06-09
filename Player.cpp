@@ -126,6 +126,7 @@ Score AIPlayer::getScore(int cur_x,int cur_y)
 			++s.attack_score;
 		else if ((*m_map)[cur_y][x] != Color::Null)
 			++s.defend_score;
+		else break;
 	}
 
 	for (int i = 1; i < 5; ++i)

@@ -178,8 +178,8 @@ GameCtr::ResultAction GameCtr::showResult(const TCHAR* winnerText)
 	putimage(0, 0, GAMEWIDTH, GAMEHIGHT, &ebg, 0, 0);
 	int boxw=350; int boxh=150; int left = (GAMEWIDTH - boxw) / 2;
 	int top = GAMEHIGHT - (GAMEHIGHT - boxh) / 2;
-	int right = ((GAMEWIDTH - boxw) / 2) + boxw;
-	int bottom= (GAMEHIGHT - boxh) / 2;
+	int right =left+ boxw;
+	int bottom = top - boxh;
 	setfillcolor(WHITE);
 	fillrectangle(left, top, right, bottom);
 	settextstyle(40, 0, _T("宋体"));
@@ -393,6 +393,7 @@ void GameCtr::gameLoop(ExMessage& em)
 	bool running = true;
 	while (running)
 	{
+		em={};
 		peekmessage(&em, EX_MOUSE|EX_KEY);
 
 		switch (em.message)
@@ -407,6 +408,7 @@ void GameCtr::gameLoop(ExMessage& em)
 			{
 				changeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor());
 				drawMapVal(*cur_p);
+				
 				if (checkWin(*cur_p))
 				{
 					const TCHAR* winMsg = (cur_p->getColor() == m_p1_color)
@@ -415,6 +417,7 @@ void GameCtr::gameLoop(ExMessage& em)
 					ResultAction act = showResult(winMsg);
 					if (act == ResultAction::one_more_round)
 					{
+						cleardevice;
 						clearGameData();
 						drawBK();
 						drawMapLine();
@@ -428,10 +431,7 @@ void GameCtr::gameLoop(ExMessage& em)
 						running = false;
 						return;
 					}
-					//绘制赢了的界面
-					clearGameData();
-					running = false;
-					return;
+					
 				}
 				else
 				{
@@ -487,6 +487,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 	bool running = true;
 	while (running)
 	{
+		em = {};
 		peekmessage(&em,EX_MOUSE|EX_KEY);
 
 		switch (em.message)
@@ -507,6 +508,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 						//绘制赢了的界面
 						if (act == ResultAction::one_more_round)
 						{
+							cleardevice;
 							clearGameData();
 							drawBK();
 							drawMapLine();
@@ -537,6 +539,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 								//绘制赢了的界面
 								if (act == ResultAction::one_more_round)
 								{
+									cleardevice();
 									clearGameData();
 									drawBK();
 									drawMapLine();
@@ -550,9 +553,17 @@ void GameCtr::gameLoopAI(ExMessage& em)
 									running = false;
 									return;
 								}
-								clearGameData();
-								running = false;
-								return;
+					
+							}
+							else 
+							{
+								settextstyle(30, 0, _T("宋体"));
+								settextcolor(WHITE);
+								setbkmode(TRANSPARENT);
+								outtextxy(MAPWIDTH + 2 * gap+20, GAMEWIDTH/3, _T("轮到你了呦！"));
+								Sleep(600);
+								setfillcolor(RGB(220,190,130));
+								fillrectangle(MAPWIDTH + 2 * gap, 0, GAMEWIDTH, GAMEHIGHT); 
 							}
 						}
 					}
