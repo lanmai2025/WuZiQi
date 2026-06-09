@@ -166,18 +166,17 @@ void GameCtr::handleTipButtonClick(Player& currentPlayer)
 	g_showTipDialog = true;
 }
 
-// 关闭弹窗
-void GameCtr::handleDialogClose(Player& p1, Player& p2)
+
+void GameCtr::handleDialogClose(Player*& cur_p)
 {
 	g_showTipDialog = false;
 	// 刷新界面
 	drawBK();
 	drawMapLine();
-	drawMapVal(p1);
-	drawMapVal(p2);
-	drawPrompt();
+	drawMapVal(*cur_p);
 	FlushBatchDraw();
 }
+
 
 // 检查是否点击了提示按钮
 bool GameCtr::isTipButtonClicked(int x, int y)
@@ -563,6 +562,7 @@ void GameCtr::gameLoop(ExMessage& em)
 	clearGameData();
 	drawBK();
 	drawMapLine();
+	drawPrompt();
 	FlushBatchDraw();
 
 	Player p[2] = {
@@ -583,16 +583,12 @@ void GameCtr::gameLoop(ExMessage& em)
 		case WM_LBUTTONDOWN:
 			
 
-			//左键下棋
-			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
-				em.x < 0 || em.y < 0) continue;
-			cur_p->changeCurX(em.x / size);
-			cur_p->changeCurY(em.y / size);
+
 
 			//弹窗关闭
 			if (isCloseBtnClicked(em.x, em.y))
 			{
-				handleDialogClose(p[0], p[1]);
+				handleDialogClose(cur_p);
 				break;
 			}
 			//点击提示按钮
@@ -611,8 +607,14 @@ void GameCtr::gameLoop(ExMessage& em)
 			//弹窗打开时，不能下棋
 			if (g_showTipDialog)
 			{
-				break;  
+				break;  //跳出，不执行后面的下棋代码
 			}
+
+			//左键下棋
+			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
+				em.x < 0 || em.y < 0) continue;
+			cur_p->changeCurX(em.x / size);
+			cur_p->changeCurY(em.y / size);
 
 			if (checkCanChangeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor()))
 			{
@@ -651,6 +653,13 @@ void GameCtr::gameLoop(ExMessage& em)
 			break;
 
 		case WM_RBUTTONDOWN:
+
+			//弹窗打开时，不能悔棋
+			if (g_showTipDialog)
+			{
+				break;  //跳出，不执行后面的悔棋代码
+			}
+
 			//右键悔棋
 			clearMap();
 			clearMapVal();
@@ -658,6 +667,7 @@ void GameCtr::gameLoop(ExMessage& em)
 			subCurRank();
 			changeCurMap();
 			drawMapVal(*cur_p);
+			drawPrompt();
 			FlushBatchDraw();
 			break;
 
@@ -682,17 +692,18 @@ void GameCtr::gameLoop(ExMessage& em)
 
 void GameCtr::gameLoopAI(ExMessage& em)
 {
+	BeginBatchDraw();//开始批量绘图
+
 	em = {};
 	clearGameData();
-	//init();
 	drawBK();
 	drawMapLine();
-
-	//ExMessage em = getmessage(EX_MOUSE);
+	drawPrompt();
+	FlushBatchDraw();
 
 	Player p = Player(0, 0, m_p1_color);
 	AIPlayer AI = AIPlayer(getX(), getY(), m_p2_color, m_cur_map);
-
+	Player* cur_p = &p;
 	int size = getBlockSize() + 1;
 
 	bool running = true;
@@ -706,16 +717,12 @@ void GameCtr::gameLoopAI(ExMessage& em)
 		{
 			case WM_LBUTTONDOWN:
 				
-				//左键下棋
-				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
-					em.x < 0 || em.y < 0) continue;
-				p.changeCurX(em.x / size);
-				p.changeCurY(em.y / size);
+
 
 				// 弹窗关闭
 				if (isCloseBtnClicked(em.x, em.y))
 				{
-					handleDialogClose(p, p);  // 人机模式只有一个玩家，传同一个
+					handleDialogClose(cur_p);
 					break;
 				}
 
@@ -727,6 +734,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 					drawMapLine();
 					drawMapVal(p);
 					drawPrompt();
+					FlushBatchDraw();
 					break;
 				}
 				
@@ -735,6 +743,12 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				{
 					break;
 				}
+
+				//左键下棋
+				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
+					em.x < 0 || em.y < 0) continue;
+				p.changeCurX(em.x / size);
+				p.changeCurY(em.y / size);
 
 
 				if (checkCanChangeMapVal(p.getCurX(), p.getCurY(), p.getColor()))
@@ -748,6 +762,8 @@ void GameCtr::gameLoopAI(ExMessage& em)
 					drawBK();
 					drawMapLine();
 					drawMapVal(p);
+					drawPrompt();
+					FlushBatchDraw();
 
 					if (checkWin(p))
 					{
@@ -766,10 +782,13 @@ void GameCtr::gameLoopAI(ExMessage& em)
 							drawMapLine();
 							drawMapVal(p);
 							drawMapVal(AI);
+							drawPrompt();
+							FlushBatchDraw();
 
 							if (checkWin(AI))
 							{
 								handleWinner(AI, false, true);
+								EndBatchDraw();
 								return;
 							}
 						}
@@ -778,6 +797,14 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				}
 				break;
 			case WM_RBUTTONDOWN:
+
+				//弹窗打开时，不能悔棋
+				if (g_showTipDialog)
+				{
+					break;  //跳出，不执行后面的悔棋代码
+				}
+
+
 				//右键悔棋
 				clearMap();
 				clearMapVal();
@@ -788,6 +815,8 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				changeCurMap();
 				drawMapVal(p);
 				AI.changeMap(m_cur_map);
+				drawPrompt();
+				FlushBatchDraw();
 				break;
 
 				//ESC键退出
@@ -796,13 +825,14 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				{
 					running = false;
 					clearGameData();
+					EndBatchDraw();
 					return;
 				}
 				break;
 		}
-		//Sleep(10);
+		
 	}
-
+	EndBatchDraw();
 }
 
 GameCtr::SettlementAction GameCtr::showWinner(Player& winner, bool isFirstPlayer, bool isAIMode)
