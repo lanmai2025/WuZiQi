@@ -176,7 +176,7 @@ GameCtr::ResultAction GameCtr::showResult(const TCHAR* winnerText)
 	IMAGE ebg;
 	loadimage(&ebg, _T("PNG"), MAKEINTRESOURCE(IDB_PNG2), GAMEWIDTH, GAMEHIGHT);
 	putimage(0, 0, GAMEWIDTH, GAMEHIGHT, &ebg, 0, 0);
-	int boxw=350; int boxh=150; int left = (GAMEWIDTH - boxw) / 2;
+	int boxw=400; int boxh=150; int left = (GAMEWIDTH - boxw) / 2;
 	int top = GAMEHIGHT - (GAMEHIGHT - boxh) / 2;
 	int right =left+ boxw;
 	int bottom = top - boxh;
@@ -412,8 +412,8 @@ void GameCtr::gameLoop(ExMessage& em)
 				if (checkWin(*cur_p))
 				{
 					const TCHAR* winMsg = (cur_p->getColor() == m_p1_color)
-						? _T("先手获胜！")
-						: _T("后手获胜！");
+						? _T("先手获胜！你很棒哦~")
+						: _T("后手获胜！你不错哟~");
 					ResultAction act = showResult(winMsg);
 					if (act == ResultAction::one_more_round)
 					{
@@ -504,7 +504,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 					drawMapVal(p);
 					if (checkWin(p))
 					{
-						ResultAction act = showResult(_T("你赢了！"));
+						ResultAction act = showResult(_T("人类战胜AI！"));
 						//绘制赢了的界面
 						if (act == ResultAction::one_more_round)
 						{
@@ -535,7 +535,7 @@ void GameCtr::gameLoopAI(ExMessage& em)
 							drawMapVal(AI);
 							if (checkWin(AI))
 							{
-								ResultAction act = showResult(_T("AI赢！"));
+								ResultAction act = showResult(_T("人类一败涂地！"));
 								//绘制赢了的界面
 								if (act == ResultAction::one_more_round)
 								{
