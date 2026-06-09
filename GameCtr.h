@@ -52,7 +52,7 @@ public:
 	//地图层级-1
 	bool subCurRank();
 	//修改方格边长
-	bool changeBlackSize();
+	bool changeBlockSize();
 	//修改地图
 	bool changeMapVal(int x, int y, Color c);
 	//修改设置
@@ -90,8 +90,6 @@ public:
 	void drawMapLine();
 	//绘制棋子
 	void drawMapVal(Player& cur_p);
-	//绘制暂停界面
-	void drawPauseTable();
 	//结算页面按钮
 	enum class SettlementAction
 	{
@@ -139,7 +137,7 @@ private:
 	int m_y;
 	int m_rank;
 	int m_cur_rank;
-	int m_black_size;
+	int m_block_size;
 	Color m_bk_color;
 	Color m_p1_color;
 	Color m_p2_color;

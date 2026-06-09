@@ -7,7 +7,7 @@ GameCtr::GameCtr(int x, int y, int rank)
 	:m_x(x),m_y(y),m_rank(rank)
 {
 	m_cur_rank = 0;
-	changeBlackSize();
+	changeBlockSize();
 	m_map = vector<vector<vector<Color>>>(rank, vector<vector<Color>>(y, vector<Color>(x,Color::Null)));
 	m_cur_map = &m_map[m_cur_rank];
 	m_bk_color = (Color)RGB(245, 222, 179);
@@ -44,7 +44,7 @@ vector<vector<Color>>& GameCtr::getCurMap(int rank)
 
 int GameCtr::getBlockSize() const
 {
-	return m_black_size;
+	return m_block_size;
 }
 
 bool GameCtr::changeX(int x)
@@ -77,9 +77,9 @@ bool GameCtr::subCurRank()
 	return true;
 }
 
-bool GameCtr::changeBlackSize()
+bool GameCtr::changeBlockSize()
 {
-	m_black_size = MAPHIGHT / getY();
+	m_block_size = MAPHIGHT / getY();
 	return true;
 }
 
@@ -344,10 +344,6 @@ void GameCtr::drawMapVal(Player& cur_p)
 	}
 }
 
-void GameCtr::drawPauseTable()
-{
-	
-}
 
 void GameCtr::handleWinner(Player& winner, bool isFirstPlayer, bool isAIMode)
 {
@@ -421,6 +417,12 @@ void GameCtr::checkAndShowMessage(int steps, Player& cur_p)
 		break;
 	case 40:
 		showInteractionMessage(L"棋盘都要下满了！", cur_p);
+		break;
+	case 50:
+		showInteractionMessage(L"这都要天荒地老了，你俩下棋有点暧昧了吧", cur_p);
+		break;
+	case 65:
+		showInteractionMessage(L"我觉得你要赢了", cur_p);
 		break;
 	default:
 		break;
@@ -575,11 +577,18 @@ void GameCtr::gameLoop(ExMessage& em)
 	while (running)
 	{
 		em = getmessage(EX_MOUSE | EX_KEY);
-		
+
 		switch (em.message)
 		{
 		case WM_LBUTTONDOWN:
 			
+
+			//左键下棋
+			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
+				em.x < 0 || em.y < 0) continue;
+			cur_p->changeCurX(em.x / size);
+			cur_p->changeCurY(em.y / size);
+
 			//弹窗关闭
 			if (isCloseBtnClicked(em.x, em.y))
 			{
@@ -593,8 +602,7 @@ void GameCtr::gameLoop(ExMessage& em)
 				// 刷新界面显示弹窗
 				drawBK();
 				drawMapLine();
-				drawMapVal(p[0]);
-				drawMapVal(p[1]);
+				drawMapVal(*cur_p);
 				drawPrompt();
 				FlushBatchDraw();
 				break;
@@ -605,12 +613,6 @@ void GameCtr::gameLoop(ExMessage& em)
 			{
 				break;  
 			}
-
-			//左键下棋
-			if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
-				em.x < 0 || em.y < 0) continue;
-			cur_p->changeCurX(em.x / size);
-			cur_p->changeCurY(em.y / size);
 
 			if (checkCanChangeMapVal(cur_p->getCurX(), cur_p->getCurY(), cur_p->getColor()))
 			{
@@ -656,11 +658,7 @@ void GameCtr::gameLoop(ExMessage& em)
 			subCurRank();
 			changeCurMap();
 			drawMapVal(*cur_p);
-
-			m_cur_p_index = (m_cur_p_index + 1) % 2;
-			cur_p = &p[m_cur_p_index];
-			m_totalSteps--;
-			
+			FlushBatchDraw();
 			break;
 
 
@@ -708,6 +706,12 @@ void GameCtr::gameLoopAI(ExMessage& em)
 		{
 			case WM_LBUTTONDOWN:
 				
+				//左键下棋
+				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
+					em.x < 0 || em.y < 0) continue;
+				p.changeCurX(em.x / size);
+				p.changeCurY(em.y / size);
+
 				// 弹窗关闭
 				if (isCloseBtnClicked(em.x, em.y))
 				{
@@ -733,11 +737,6 @@ void GameCtr::gameLoopAI(ExMessage& em)
 				}
 
 
-				//左键下棋
-				if (em.x > MAPWIDTH || em.y > MAPHIGHT ||
-					em.x < 0 || em.y < 0) continue;
-				p.changeCurX(em.x / size);
-				p.changeCurY(em.y / size);
 				if (checkCanChangeMapVal(p.getCurX(), p.getCurY(), p.getColor()))
 				{
 					m_humanSteps++;
@@ -1250,7 +1249,7 @@ bool GameCtr::gameSet(ExMessage& em)
 					changeX(Map_y);
 					changeY(Map_y);
 					changeMap();
-					changeBlackSize();
+					changeBlockSize();
 					return true;
 				}
 				break;
