@@ -48,7 +48,7 @@
     <Image Include="主页.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\..\照片\settle_bg.png">
+    <Image Include="settle_bg.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

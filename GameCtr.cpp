@@ -947,10 +947,10 @@ GameCtr::SettlementAction GameCtr::showWinner(Player& winner, bool isFirstPlayer
 void GameCtr::menu()
 {
 	bool should_exit = false;
+	init();
 
 	while (!should_exit) {
 		// 每次循环都重新绘制菜单
-		init();
 		drawBK();
 		drawMapLine();
 		drawStartBoard();
@@ -1010,9 +1010,9 @@ void GameCtr::menu()
 			}
 			Sleep(10);
 		}
-	closegraph();
 
 	}
+	closegraph();	
 }
 
 
