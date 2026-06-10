@@ -57,8 +57,6 @@ public:
 	bool changeMapVal(int x, int y, Color c);
 	//修改设置
 	bool gameSet(ExMessage& em);
-	//修改游戏参数
-	bool reSetGame();
 	//修改背景颜色
 	bool setBKColor(Color c);
 	//修改玩家颜色

@@ -1237,8 +1237,8 @@ bool GameCtr::gameSet(ExMessage& em)
 		// 尺寸选择框（如果显示）
 		if (show_size_picker) {
 			setfillcolor(WHITE);
-			fillrectangle(400, start_y, 500, start_y + 120);
-			rectangle(400, start_y, 500, start_y + 120);
+			fillrectangle(400, start_y, 500, start_y + 140);
+			rectangle(400, start_y, 500, start_y + 140);
 			outtextxy(410, start_y + 10, _T("选择尺寸:"));
 
 			for (int i = 0; i < 3; i++) {
