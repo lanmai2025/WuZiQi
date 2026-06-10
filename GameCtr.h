@@ -102,6 +102,14 @@ public:
 	void handleWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
 	
 
+	//绘制结算界面
+	enum class ResultAction
+	{
+		one_more_round,
+		go_menu
+	};
+	ResultAction showResult(const TCHAR* winnerText);
+
 
 	//清除
 
