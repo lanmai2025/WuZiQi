@@ -101,6 +101,8 @@ public:
 	SettlementAction showWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
 	void handleWinner(Player& winner, bool isFirstPlayer, bool isAIMode);
 	
+
+
 	//Çå³ı
 
 	//ÖØÖÃµØÍ¼

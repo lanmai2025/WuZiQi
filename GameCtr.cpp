@@ -208,6 +208,82 @@ bool GameCtr::isCloseBtnClicked(int x, int y)
 		y >= closeY && y <= closeY + 35);
 }
 
+GameCtr::ResultAction GameCtr::showResult(const TCHAR* winnerText)
+{
+	IMAGE ebg;
+	loadimage(&ebg, _T("PNG"), MAKEINTRESOURCE(IDB_PNG2), GAMEWIDTH, GAMEHIGHT);
+	putimage(0, 0, GAMEWIDTH, GAMEHIGHT, &ebg, 0, 0);
+	int boxw = 350; int boxh = 150; int left = (GAMEWIDTH - boxw) / 2;
+	int top = GAMEHIGHT - (GAMEHIGHT - boxh) / 2;
+	int right = left + boxw;
+	int bottom = top - boxh;
+	setfillcolor(WHITE);
+	fillrectangle(left, top, right, bottom);
+	settextstyle(40, 0, _T("宋体"));
+	settextcolor(BLACK);
+	setbkmode(TRANSPARENT);
+	int textWidth = textwidth(winnerText);
+	int textX = (GAMEWIDTH - textWidth) / 2;
+	int textY = top - 130;
+	outtextxy(textX, textY, winnerText);
+	int btnw = 120, btnh = 40, btnGap = 40;
+	int totalBtnWidth = btnw * 2 + btnGap;
+	int btn1Left = left + (boxw - totalBtnWidth) / 2;
+	int btn2Left = btn1Left + btnw + btnGap;
+	int btnTop = bottom + 100;   // 从底部向上70像素
+	int btnBottom = btnTop + btnh;
+	// 按钮1
+	setfillcolor(RGB(220, 190, 130));
+	fillrectangle(btn1Left, btnTop, btn1Left + btnw, btnBottom);
+	setlinecolor(BLACK);
+	rectangle(btn1Left, btnTop, btn1Left + btnw, btnBottom);
+	settextstyle(20, 0, _T("宋体"));
+	settextcolor(BLACK);
+	setbkmode(TRANSPARENT);
+	const TCHAR* btnText1 = _T("再来一局");
+	int tw1 = textwidth(btnText1);
+	int th1 = textheight(btnText1);
+	int tx1 = btn1Left + (btnw - tw1) / 2;
+	int ty1 = btnTop + (btnh - th1) / 2;
+	outtextxy(tx1, ty1, btnText1);
+	//按钮2
+	setfillcolor(RGB(220, 190, 130));
+	fillrectangle(btn2Left, btnTop, btn2Left + btnw, btnBottom);
+	setlinecolor(BLACK);
+	rectangle(btn2Left, btnTop, btn2Left + btnw, btnBottom);
+	settextstyle(20, 0, _T("宋体"));
+	settextcolor(BLACK);
+	setbkmode(TRANSPARENT);
+	const TCHAR* btnText2 = _T("返回首页");
+	int tw2 = textwidth(btnText2);
+	int th2 = textheight(btnText2);
+	int tx2 = btn2Left + (btnw - tw2) / 2;
+	int ty2 = btnTop + (btnh - th2) / 2;
+	outtextxy(tx2, ty2, btnText2);
+	ExMessage m;
+	while (true)
+	{
+		if (peekmessage(&m, EX_MOUSE))
+		{
+			if (m.message == WM_LBUTTONDOWN)
+			{
+				if (m.x >= btn1Left && m.x <= (btn1Left + btnw) &&
+					m.y >= btnTop && m.y <= btnBottom)
+				{
+					return ResultAction::one_more_round;
+				}
+				if (m.x >= btn2Left && m.x <= (btn2Left + btnw) &&
+					m.y >= btnTop && m.y <= btnBottom)
+				{
+					return ResultAction::go_menu;
+				}
+			}
+		}
+		Sleep(10);
+	}
+}
+
+
 void GameCtr::drawPrompt()
 {
 	//————绘制按钮————
