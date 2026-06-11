@@ -764,6 +764,8 @@ void GameCtr::gameLoop(ExMessage& em)
 			drawMapVal(*cur_p);
 			drawPrompt();
 			FlushBatchDraw();
+			m_cur_p_index = (m_cur_p_index + 1) % 2;
+			cur_p = &p[m_cur_p_index];
 			break;
 
 
